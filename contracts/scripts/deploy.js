@@ -9,14 +9,22 @@ async function main() {
 
   console.log(`Game deployed to ${game.address}`);
 
-  const data = JSON.stringify({
-    Game: {
-      abi: Game.interface.fragments,
-      address: game.address,
+  const data = JSON.stringify(
+    {
+      Game: {
+        abi: Game.interface.fragments,
+        address: game.address,
+      },
     },
-  });
+    null,
+    2
+  );
   // console.log(data);
-  fs.writeFileSync(`../front/src/contracts.json`, data);
+  fs.mkdirSync("../front/src/data", { recursive: true });
+  fs.writeFileSync(
+    `../front/src/data/contracts.ts`,
+    `export default ${data} as const;`
+  );
 }
 
 main().catch((error) => {
