@@ -8,6 +8,8 @@
   "scripts": {
     "hardhat": "hardhat",
     "test": "hardhat test",
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "node": "hardhat node",
+    "deploy-contracts": "hardhat run scripts/deploy.js"
   }
 }
