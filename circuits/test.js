@@ -1,7 +1,7 @@
-// const snarkjs = require("snarkjs");
-// const fs = require("fs");
-import * as snarkjs from "snarkjs";
-import fs from "fs";
+const snarkjs = require("snarkjs");
+const fs = require("fs");
+// import * as snarkjs from "snarkjs";
+// import fs from "fs";
 
 async function run() {
   const { proof, publicSignals } = await snarkjs.plonk.fullProve(

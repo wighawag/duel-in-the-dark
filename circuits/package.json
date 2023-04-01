@@ -5,7 +5,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
   "devDependencies": {
