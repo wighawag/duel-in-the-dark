@@ -74,10 +74,10 @@ template MyTurn() {
     missed === enemy_shot - previous_location;
 
     // We check if the private previous location match the previous hash
-    // component previous_hasher = Poseidon(2);
-    // previous_hasher.inputs[0] <== previous_salt;
-    // previous_hasher.inputs[1] <== previous_location;
-    // previous_hasher.out === previous_commit_hash;
+    component previous_hasher = Poseidon(2);
+    previous_hasher.inputs[0] <== previous_salt;
+    previous_hasher.inputs[1] <== previous_location;
+    previous_hasher.out === previous_commit_hash;
 
     // We compute the new hash commiting the new location
     // component new_hasher = Poseidon(2);

@@ -1,14 +1,18 @@
-const snarkjs = require("snarkjs");
-const fs = require("fs");
 // import * as snarkjs from "snarkjs";
 // import fs from "fs";
+const snarkjs = require("snarkjs");
+const fs = require("fs");
+const circomlibjs = require("circomlibjs");
 
 async function run() {
+  const poseidon = await circomlibjs.buildPoseidon();
+  const previous_commit_hash = poseidon.F.toString(poseidon([0, 0]));
+
   const { proof, publicSignals } = await snarkjs.plonk.fullProve(
     {
       enemy_shot: 1,
       missed: 1,
-      previous_commit_hash: 0,
+      previous_commit_hash,
 
       previous_salt: 0,
       previous_location: 0,
