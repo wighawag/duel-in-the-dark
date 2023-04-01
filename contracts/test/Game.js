@@ -14,7 +14,8 @@ async function solidityProof(fullProof) {
 }
 
 async function do_move(circuit, contract, values) {
-  const { previous_location, move, new_location, hit, enemy_shot } = values;
+  const { previous_location, move, new_location, hit, enemy_shot, shot } =
+    values;
 
   const poseidon = await circomlibjs.buildPoseidon();
   const new_commit_hash = poseidon.F.toString(poseidon([0, new_location]));
@@ -36,7 +37,14 @@ async function do_move(circuit, contract, values) {
       new_location,
     },
   });
-  await contract.move(await solidityProof(fullProof), hit, new_commit_hash);
+  const fronContract = await contract.callStatic.enemy_shot();
+  console.log({ fronContract });
+  await contract.move(
+    await solidityProof(fullProof),
+    hit,
+    new_commit_hash,
+    shot
+  );
 }
 
 describe("Game", function () {
@@ -59,7 +67,7 @@ describe("Game", function () {
       await games[1].start(first_hash);
 
       await expect(
-        games[0].acceptAndMove("0x00", "0x00", true, "0x00")
+        games[0].acceptAndMove("0x00", "0x00", true, "0x00", 2)
       ).to.be.revertedWith("INVALID_PROOF");
     });
 
@@ -115,7 +123,8 @@ describe("Game", function () {
         previous_commit_hash,
         await solidityProof(fullProof),
         hit,
-        new_commit_hash
+        new_commit_hash,
+        2
       );
     });
 
@@ -171,7 +180,8 @@ describe("Game", function () {
         previous_commit_hash,
         await solidityProof(fullProof),
         hit,
-        new_commit_hash
+        new_commit_hash,
+        2
       );
 
       await do_move(circuit, games[1], {
@@ -179,16 +189,58 @@ describe("Game", function () {
         move: 3,
         new_location: 2,
         hit: false,
-        enemy_shot: 0,
+        enemy_shot: 2,
+        shot: 2,
       });
 
-      // await do_move(circuit, games[0], {
-      //   previous_location: 3,
-      //   move: 3,
-      //   new_location: 2,
-      //   hit: false,
-      //   enemy_shot: 0,
-      // });
+      await do_move(circuit, games[0], {
+        previous_location: 2,
+        move: 2,
+        new_location: 4,
+        hit: true,
+        enemy_shot: 2,
+        shot: 3,
+      });
+
+      await do_move(circuit, games[1], {
+        previous_location: 2,
+        move: 3,
+        new_location: 1,
+        hit: false,
+        enemy_shot: 3,
+        shot: 4,
+      });
+
+      // dead and declared
+      await do_move(circuit, games[0], {
+        previous_location: 4,
+        move: 0,
+        new_location: 2,
+        hit: true,
+        enemy_shot: 4,
+        shot: 3,
+      });
+
+      await do_move(circuit, games[1], {
+        previous_location: 1,
+        move: 2,
+        new_location: 5,
+        hit: false,
+        enemy_shot: 3,
+        shot: 8,
+      });
+
+      // dead cannot make a nove
+      await expect(
+        do_move(circuit, games[0], {
+          previous_location: 2,
+          move: 3,
+          new_location: 1,
+          hit: false,
+          enemy_shot: 8,
+          shot: 3,
+        })
+      ).to.be.revertedWith("NO MORE_LIFE");
     });
   });
 });

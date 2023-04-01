@@ -13,9 +13,9 @@ contract Game {
         address payable addr;
         uint8 numHit;
     }
-    uint8 internal enemy_shot;
-    uint256 internal turn;
-    Player[2] internal players;
+    uint8 public enemy_shot;
+    uint256 public turn;
+    Player[2] public players;
 
     constructor() {
         verifier = new PlonkVerifier();
@@ -33,7 +33,8 @@ contract Game {
         uint256 prevHash,
         bytes calldata proof,
         bool hit,
-        uint256 new_hash
+        uint256 new_hash,
+        uint8 shot
     ) external payable {
         require(turn == 0, "ALREADY_STARTED");
         require(players[1].addr != address(0), "NO_OTHER_PLAYER");
@@ -44,10 +45,15 @@ contract Game {
 
         require(msg.value >= address(this).balance, "NEED_MORE");
 
-        _move(player, proof, hit, new_hash);
+        _move(player, proof, hit, new_hash, shot);
     }
 
-    function move(bytes calldata proof, bool hit, uint256 new_hash) external {
+    function move(
+        bytes calldata proof,
+        bool hit,
+        uint256 new_hash,
+        uint8 shot
+    ) external {
         uint256 playerIndex = turn % 2;
         Player memory player = players[playerIndex];
 
@@ -57,14 +63,15 @@ contract Game {
         if (player.numHit >= LIFE) {
             revert("NO MORE LIFE");
         }
-        _move(player, proof, hit, new_hash);
+        _move(player, proof, hit, new_hash, shot);
     }
 
     function _move(
         Player memory player,
         bytes calldata proof,
         bool hit,
-        uint256 new_hash // TODO shot
+        uint256 new_hash,
+        uint8 shot
     ) internal {
         uint256 playerIndex = turn % 2;
         uint256[] memory publicSignals = new uint256[](4);
@@ -86,10 +93,13 @@ contract Game {
 
         players[playerIndex] = player;
 
+        enemy_shot = shot;
+
         turn++;
     }
 
     function withdraw() external {
+        // TODO timeout in case the loser do not want to abdict
         Player storage player1 = players[0];
         Player storage player2 = players[0];
         if (player1.numHit >= LIFE) {
