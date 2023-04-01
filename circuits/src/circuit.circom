@@ -25,12 +25,26 @@ template ValidMove() {
     signal input index;
     signal output out;
 
-    var array[16] =  [2,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0];
+    // this is a 2 dimensional array of dimension [8][4] with access [a][b]
+    // with (a-1) * 4 + b
+    // where a is the location and b is the move
+    // this describe the possible moves player can make with one move action
+    // there is in total 8 rooms
+    var array[32] =  [
+        0,2,5,0,
+        0,3,4,1,
+        0,0,8,2,
+        2,0,7,0,
+        1,7,6,0,
+        5,7,8,0,
+        4,8,6,5,
+        7,3,0,6
+    ];
     
     // Ensure that index < choices
-    component lessThan = LessThan(4);
+    component lessThan = LessThan(5);
     lessThan.in[0] <== index;
-    lessThan.in[1] <== 16;
+    lessThan.in[1] <== 32;
     lessThan.out === 1;
 
     component calcTotal = CalculateTotal(16);
@@ -47,13 +61,18 @@ template ValidMove() {
         calcTotal.nums[i] <== eqs[i].out * array[i];
     }
 
+    // ensure it is not zero
+    component zero = IsZero();
+    zero.in <== calcTotal.sum;
+    zero.out === 0;
+
     // Returns 0 + 0 + ... + item
     out <== calcTotal.sum;
 }
 
 template MyTurn() {
     signal input enemy_shot;
-    signal input missed;
+    signal input hit;
     signal input previous_commit_hash;
     
     signal input previous_salt;
@@ -66,12 +85,13 @@ template MyTurn() {
 
 
     component isValid = ValidMove();
-    isValid.index <== previous_location * 4 + move;
+    isValid.index <== (previous_location - 1) * 4 + move;
     isValid.out === new_location;
 
-
-    // enemy missed if enemy_shot != previous_location
-    missed === enemy_shot - previous_location;
+    // ensure hit
+    component is_hit = IsZero();
+    is_hit.in <== enemy_shot - previous_location;
+    is_hit.out === hit;
 
     // We check if the private previous location match the previous hash
     component previous_hasher = Poseidon(2);
@@ -86,4 +106,4 @@ template MyTurn() {
     new_hasher.out ==> new_commit_hash;
 }
 
-component main {public [enemy_shot, missed, previous_commit_hash]} = MyTurn();
+component main {public [enemy_shot, hit, previous_commit_hash]} = MyTurn();

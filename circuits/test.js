@@ -6,17 +6,17 @@ const circomlibjs = require("circomlibjs");
 
 async function run() {
   const poseidon = await circomlibjs.buildPoseidon();
-  const previous_commit_hash = poseidon.F.toString(poseidon([0, 0]));
+  const previous_commit_hash = poseidon.F.toString(poseidon([0, 1]));
 
   const { proof, publicSignals } = await snarkjs.plonk.fullProve(
     {
-      enemy_shot: 1,
-      missed: 1,
+      enemy_shot: 3,
+      hit: 0,
       previous_commit_hash,
 
       previous_salt: 0,
-      previous_location: 0,
-      move: 0,
+      previous_location: 1,
+      move: 1,
       new_salt: 0,
       new_location: 2,
     },
