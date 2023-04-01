@@ -240,7 +240,7 @@ describe("Game", function () {
           enemy_shot: 8,
           shot: 3,
         })
-      ).to.be.revertedWith("NO MORE_LIFE");
+      ).to.be.revertedWith("NO MORE LIFE");
     });
   });
 });
