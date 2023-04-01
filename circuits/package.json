@@ -33,6 +33,7 @@
     "plonk:proof": "snarkjs plonk prove out/circuit_final.zkey out/witness.wtns out/proof.json out/public.json",
     "proof:verify": "snarkjs plonk verify out/verification_key.json out/public.json out/proof.json",
     "solidity:generate": "mkdir -p contracts && snarkjs zkey export solidityverifier out/circuit_final.zkey contracts/verifier.sol",
-    "solidity:calldata": "snarkjs zkey export soliditycalldata out/public.json out/proof.json"
+    "solidity:calldata": "snarkjs zkey export soliditycalldata out/public.json out/proof.json",
+    "export-for-web-and-contracts": "cp out/circuit_final.zkey ../web/static/ && cp out/circuit_js/circuit.wasm ../web/static/ && cp out/verification_key.json ../web/static/ && cp -R contracts/* ../contracts/circuits"
   }
 }
