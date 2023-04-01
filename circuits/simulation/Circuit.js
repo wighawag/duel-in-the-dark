@@ -3,7 +3,12 @@ const fs = require("fs");
 const circomlibjs = require("circomlibjs");
 
 module.exports = {
-  setupCircuit() {
+  setupCircuit(p) {
+    const pathToWasm = (p ? p + "/" : "") + "out/circuit_js/circuit.wasm";
+    const pathToZkey = (p ? p + "/" : "") + "out/circuit_final.zkey";
+    const pathToVerificationKey =
+      (p ? p + "/" : "") + "out/verification_key.json";
+
     async function generateProof(situation) {
       const { publicState, revealed, secretState, secretAction, publicAction } =
         situation;
@@ -25,19 +30,16 @@ module.exports = {
           new_salt: secretAction.new_salt,
           new_location: secretAction.new_location,
         },
-        "out/circuit_js/circuit.wasm",
-        "out/circuit_final.zkey"
+        pathToWasm,
+        pathToZkey
       );
 
       return fullProof;
-
-      // console.log("Proof: ");
-      // console.log(JSON.stringify(proof, null, 1));
     }
     async function verifyProof(fullProof) {
       const { proof, publicSignals } = fullProof;
 
-      const vKey = JSON.parse(fs.readFileSync("out/verification_key.json"));
+      const vKey = JSON.parse(fs.readFileSync(pathToVerificationKey));
       const res = await snarkjs.plonk.verify(vKey, publicSignals, proof);
 
       return res;
