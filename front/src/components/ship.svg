@@ -1,0 +1,48 @@
+<svg width="2324" height="1774" viewBox="0 0 2324 1774" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Ship">
+<rect width="2324" height="1774" fill="black"/>
+<g id="rooms">
+<g id="Vector">
+<path d="M421.5 654.5L622.5 1422L306 1422L136 654.5L421.5 654.5Z" fill="#949393"/>
+<path d="M376 731.5L588.5 1391.5L331 1400.5L218 720.355L376 731.5Z" fill="#898181"/>
+</g>
+<path id="room-5" d="M502.793 657.1L892.426 657.1L1012.87 1050.9L602.078 1050.9L502.793 657.1Z" fill="#D9D9D9" stroke="black" stroke-width="0.2"/>
+<path id="room-4" d="M606.126 1089.26L1270.93 1089.26L1365.37 1409.26L679.416 1409.26L606.126 1089.26Z" fill="#D9D9D9" stroke="black" stroke-width="0.2"/>
+<path id="room-3" d="M957.133 657.1L1210.44 657.1L1393.84 1041.05L1070.57 1048.9L957.133 657.1Z" fill="#D9D9D9" stroke="black" stroke-width="0.2"/>
+<path id="room-2" d="M1890 464L2050.96 627.993L1675.97 630.546L1613.98 525.523L1194 430.5L1552 420.5L1890 464Z" fill="#D9D9D9"/>
+<path id="room-1" d="M2063.49 645.908L2182.5 817L1786.5 836.904L1688.5 648.462L2063.49 645.908Z" fill="#D9D9D9"/>
+<path id="room7" d="M2137 1210L2186.5 841.5L1807 862.5L1861 989L1506 1016L1402 1280L1905 1233L2137 1210Z" fill="#D9D9D9"/>
+<path id="room8" d="M1593.5 570L1819 1002.5L1541.64 1022.07L1353 570L1593.5 570Z" fill="#D9D9D9"/>
+</g>
+<g id="stairs">
+<g id="Vector_2">
+<path d="M1342 930L1309 869H1328L1363 930H1342Z" fill="#B3ABAB"/>
+<path d="M1386 914L1353 853H1372L1407 914H1386Z" fill="#B3ABAB"/>
+<path d="M1427 884L1394 823H1413L1448 884H1427Z" fill="#B3ABAB"/>
+<path d="M1468 869L1435 808H1454L1489 869H1468Z" fill="#B3ABAB"/>
+<path d="M1342 930L1309 869H1328L1363 930H1342Z" stroke="black" stroke-width="0.2"/>
+<path d="M1386 914L1353 853H1372L1407 914H1386Z" stroke="black" stroke-width="0.2"/>
+<path d="M1427 884L1394 823H1413L1448 884H1427Z" stroke="black" stroke-width="0.2"/>
+<path d="M1468 869L1435 808H1454L1489 869H1468Z" stroke="black" stroke-width="0.2"/>
+</g>
+<g id="Vector_3">
+<path d="M1770.5 772L1737.5 711H1756.5L1791.5 772H1770.5Z" fill="#B3ABAB"/>
+<path d="M1739 779L1706 718H1725L1760 779H1739Z" fill="#B3ABAB"/>
+<path d="M1707 788L1674 727H1693L1728 788H1707Z" fill="#B3ABAB"/>
+<path d="M1685 809L1652 748H1671L1706 809H1685Z" fill="#B3ABAB"/>
+<path d="M1770.5 772L1737.5 711H1756.5L1791.5 772H1770.5Z" stroke="black" stroke-width="0.2"/>
+<path d="M1739 779L1706 718H1725L1760 779H1739Z" stroke="black" stroke-width="0.2"/>
+<path d="M1707 788L1674 727H1693L1728 788H1707Z" stroke="black" stroke-width="0.2"/>
+<path d="M1685 809L1652 748H1671L1706 809H1685Z" stroke="black" stroke-width="0.2"/>
+</g>
+</g>
+<g id="vents">
+<path id="vent" d="M1445 379H1540V417H1445V379Z" fill="#F2B7B7"/>
+<path id="vent_2" d="M332 1363H427V1401H332V1363Z" fill="#F2B7B7"/>
+<path id="vent_3" d="M1756.5 957L1855 947V985L1756.5 995V957Z" fill="#F2B7B7"/>
+<path id="vent_4" d="M1107 607H1202V645H1107V607Z" fill="#F2B7B7"/>
+<path id="vent_5" d="M669 1285L698 1371.5V1409.5L669 1323V1285Z" fill="#F2B7B7"/>
+<path id="vent_6" d="M593 1285L622 1371.5V1409.5L593 1323V1285Z" fill="#F2B7B7"/>
+</g>
+</g>
+</svg>
