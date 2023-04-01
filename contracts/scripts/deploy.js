@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+const fs = require("fs");
 
 async function main() {
   const Game = await hre.ethers.getContractFactory("Game");
@@ -7,6 +8,15 @@ async function main() {
   await game.deployed();
 
   console.log(`Game deployed to ${game.address}`);
+
+  const data = JSON.stringify({
+    Game: {
+      abi: Game.interface.fragments,
+      address: game.address,
+    },
+  });
+  // console.log(data);
+  fs.writeFileSync(`../front/src/contracts.json`, data);
 }
 
 main().catch((error) => {
