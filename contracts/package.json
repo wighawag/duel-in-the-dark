@@ -1,0 +1,12 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "hardhat": "^2.13.0"
+  },
+  "scripts": {
+    "hardhat": "hardhat",
+    "test": "hardhat test",
+    "compile": "hardhat compile"
+  }
+}

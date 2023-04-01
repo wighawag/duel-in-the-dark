@@ -16,3 +16,6 @@ docs/
 # we generate them from the circuits folder, so we can ignore them
 # TODO use npm package ? so we can remove that
 circuits
+
+# hardhat
+artifacts

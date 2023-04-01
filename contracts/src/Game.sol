@@ -14,7 +14,7 @@ contract Game {
     }
     uint8 internal enemy_shot;
     uint256 internal turn;
-    Player[] internal players;
+    Player[2] internal players;
 
     constructor() {
         verifier = new PlonkVerifier();
