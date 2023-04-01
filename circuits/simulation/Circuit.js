@@ -14,9 +14,9 @@ module.exports = {
         situation;
 
       const poseidon = await circomlibjs.buildPoseidon();
-      const previous_commit_hash = poseidon.F.toString(
-        poseidon([0, secretState.previous_location])
-      );
+      const previous_commit_hash =
+        secretState.previous_commit_hash ||
+        poseidon.F.toString(poseidon([0, secretState.previous_location]));
 
       const fullProof = await snarkjs.plonk.fullProve(
         {
@@ -33,6 +33,8 @@ module.exports = {
         pathToWasm,
         pathToZkey
       );
+
+      // console.log(JSON.stringify(fullProof, null, 2));
 
       return fullProof;
     }
