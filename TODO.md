@@ -1,0 +1,3 @@
+- [ ] automaticly copies wasm, verificatio_key and final_zkey in the web static folder
+- [ ] Also test in an ipfs env if the file are picked up properly
+- [ ] Alternatively, allow to import these files
