@@ -47,11 +47,11 @@ template ValidMove() {
     lessThan.in[1] <== 32;
     lessThan.out === 1;
 
-    component calcTotal = CalculateTotal(16);
-    component eqs[16];
+    component calcTotal = CalculateTotal(32);
+    component eqs[32];
 
     // For each item, check whether its index equals the input index.
-    for (var i = 0; i < 16; i ++) {
+    for (var i = 0; i < 32; i ++) {
         eqs[i] = IsEqual();
         eqs[i].in[0] <== i;
         eqs[i].in[1] <== index;
