@@ -4,6 +4,9 @@ importers:
 
   circuits:
     devDependencies:
+      circomlib:
+        specifier: ^2.0.5
+        version: 2.0.5
       snarkjs:
         specifier: ^0.6.10
         version: 0.6.10
@@ -738,6 +741,10 @@ packages:
     hasBin: true
     dependencies:
       ffjavascript: 0.2.57
+
+  /circomlib@2.0.5:
+    resolution: {integrity: sha512-O7NQ8OS+J4eshBuoy36z/TwQU0YHw8W3zxZcs4hVwpEll3e4hDm3mgkIPqItN8FDeLEKZFK3YeT/+k8TiLF3/A==}
+    dev: true
 
   /cli-truncate@3.1.0:
     resolution: {integrity: sha512-wfOBkjXteqSnI59oPcJkcPl/ZmwvMMOj340qUIY1SKZCv0B9Cf4D4fAucRkIKQmsIuYK3x1rrgU7MeGRruiuiA==}

@@ -5,7 +5,17 @@ const fs = require("fs");
 
 async function run() {
   const { proof, publicSignals } = await snarkjs.plonk.fullProve(
-    { a: 10, b: 21 },
+    {
+      enemy_shot: 1,
+      missed: 1,
+      previous_commit_hash: 0,
+
+      previous_salt: 0,
+      previous_location: 0,
+      move: 0,
+      new_salt: 0,
+      new_location: 2,
+    },
     "out/circuit_js/circuit.wasm",
     "out/circuit_final.zkey"
   );
