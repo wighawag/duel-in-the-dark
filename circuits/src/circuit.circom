@@ -80,13 +80,10 @@ template MyTurn() {
     previous_hasher.out === previous_commit_hash;
 
     // We compute the new hash commiting the new location
-    // component new_hasher = Poseidon(2);
-    // new_hasher.inputs[0] <== new_salt;
-    // new_hasher.inputs[1] <== new_location;
-    // new_hasher.out ==> new_commit_hash;
-
-    // TODO remove
-    new_commit_hash <== 0;
+    component new_hasher = Poseidon(2);
+    new_hasher.inputs[0] <== new_salt;
+    new_hasher.inputs[1] <== new_location;
+    new_hasher.out ==> new_commit_hash;
 }
 
 component main {public [enemy_shot, missed, previous_commit_hash]} = MyTurn();
