@@ -14,6 +14,7 @@
     "@types/react": "18.0.31",
     "@types/react-dom": "18.0.11",
     "babel": "^6.23.0",
+    "circomlibjs": "^0.1.7",
     "eslint": "8.37.0",
     "eslint-config-next": "13.2.4",
     "ethers": "5",
@@ -22,6 +23,7 @@
     "react-dom": "18.2.0",
     "react-icons": "^4.8.0",
     "sass": "^1.60.0",
+    "snarkjs": "^0.6.10",
     "typescript": "5.0.3",
     "wagmi": "^0.12.8"
   }
