@@ -20,6 +20,6 @@
     "test": "hardhat test",
     "compile": "hardhat compile",
     "node": "hardhat node",
-    "deploy-contracts": "hardhat run scripts/deploy.js"
+    "deploy-contracts": "hardhat run --network localhost scripts/deploy.js"
   }
 }

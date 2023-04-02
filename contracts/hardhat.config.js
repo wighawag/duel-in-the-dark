@@ -6,4 +6,9 @@ module.exports = {
   paths: {
     sources: "src",
   },
+  networks: {
+    localhost: {
+      url: "http://localhost:8545",
+    },
+  },
 };
