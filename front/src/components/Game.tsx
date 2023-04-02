@@ -10,10 +10,10 @@ import { createGame } from "@/utils/zk/contracts";
 import { BigNumber } from "ethers";
 import { useNetwork, useSwitchNetwork, configureChains } from 'wagmi'
 import {hardhat} from '@wagmi/chains'
+import { useContractRead } from 'wagmi'
 
 export function Game() {
   const { chain } = useNetwork()
-  const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork()
   const [gameState, setGameState] = useState<
     "begin" | "waiting" | "during" | "win" | "lose"
   >("begin");
@@ -30,6 +30,16 @@ export function Game() {
   })
   const { write } = useContractWrite(config)
 
+  const { data, isError, isLoading } = useContractRead({
+    address: contracts.Game.address,
+    abi: contracts.Game.abi,
+    functionName: 'turn',
+    watch: true,
+
+  })
+
+  
+
   useEffect(() => {
     (async () => {
       const ret = await createGame(1)
@@ -37,10 +47,9 @@ export function Game() {
     })()
   }, [])
 
-  const beginGame = () =>{
+  const beginGame = async () =>{
     if(address)
     {
-      createGame(1)
       console.log(createGameHash)
       write?.()
       setGameState("during")
@@ -72,8 +81,10 @@ export function Game() {
     );
   }
 
+  console.log("DATA", data)
   return (
     <div>
+      <div>{data?.toString()}</div>
       <div className={styles.primaryButton}>Play</div>
       <Ship />
     </div>

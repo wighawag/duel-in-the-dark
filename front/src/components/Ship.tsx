@@ -13,7 +13,7 @@ const adj = [
   7,3,0,6]
 function Ship() {
   const [rooms, setRooms] = useState({
-    current: 3,
+    current: 1,
     selected: -1,
   });
 
@@ -107,9 +107,9 @@ function Ship() {
           ></path>
           <path
             className={checkAdjacent(3) ? styles.room : ""}
-            // fill={setFill(3)}
-            strokeWidth={10}
-            fill={"#FF00FF"}
+            fill={setFill(3)}
+            // strokeWidth={10}
+            // fill={"#FF00FF"}
             stroke={setFill(3)}
 
             onClick={() => setSelectedRoom(3)}
