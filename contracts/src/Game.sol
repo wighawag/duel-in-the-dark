@@ -29,6 +29,18 @@ contract Game {
         players[1].addr = payable(msg.sender);
     }
 
+    // there is no point ending with listen and or call it twice
+    // this is a special function that ask the other player to reveal some info about its position
+    // listen can be prefixed by an action, but there is no real sense it should end the turn
+    // even the number of prefix that make sense is limited
+    // - reveal room to get listen boost
+    // - reveal toom to get free ap
+    // - the last one could let you move first and then listen, but this is technically not a good strategy as you could have listen first and acted accordingly
+    // so we have reveal+listen or listen as potential first half move, which then need to wait for the other player to reply
+    // function listen() external {
+
+    // }
+
     function acceptAndMove(
         uint256 prevHash,
         bytes calldata proof,
