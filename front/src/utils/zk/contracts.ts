@@ -1,4 +1,5 @@
-import * as snarkjs from "snarkjs";
+// import * as snarkjs from "snarkjs";
+
 import * as circomlibjs from "circomlibjs";
 import { generateProof } from "./circuit";
 
@@ -6,7 +7,7 @@ export async function solidityProof(fullProof: {
   proof: unknown;
   publicSignals: unknown[];
 }): Promise<string> {
-  const calldata = await snarkjs.plonk.exportSolidityCallData(
+  const calldata = await (window as any).plonk.exportSolidityCallData(
     fullProof.proof,
     fullProof.publicSignals
   );

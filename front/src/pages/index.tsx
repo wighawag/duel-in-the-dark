@@ -6,12 +6,27 @@ import { Game } from "../components/Game";
 import { WagmiConfig, createClient } from "wagmi";
 import { getDefaultProvider } from "ethers";
 import { Header } from "@/components/Header";
+import { InjectedConnector } from 'wagmi/connectors/injected'
+import { hardhat } from "@wagmi/chains";
+import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 
+import { configureChains } from 'wagmi'
+import { publicProvider } from 'wagmi/providers/public'
+ 
+const { chains, provider } = configureChains(
+  [hardhat],
+  [publicProvider()],
+)
+
+const connector = new MetaMaskConnector({
+  chains: [hardhat],
+})
 const inter = Inter({ subsets: ["latin"] });
 
 const client = createClient({
   autoConnect: false,
-  provider: getDefaultProvider(),
+  provider: provider,
+  connectors: [connector]
 });
 
 export default function Home() {

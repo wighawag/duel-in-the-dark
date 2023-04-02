@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@babel/core": ">=7.4.0 <8.0.0",
+    "@next/polyfill-module": "^13.2.4",
     "@types/node": "18.15.11",
     "@types/react": "18.0.31",
     "@types/react-dom": "18.0.11",
+    "@wagmi/chains": "^0.2.15",
     "babel": "^6.23.0",
     "circomlibjs": "^0.1.7",
     "eslint": "8.37.0",

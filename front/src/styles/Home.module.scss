@@ -23,11 +23,12 @@
 .room{
   &:hover{
     cursor: pointer;
-    filter: drop-shadow(3px 5px 2px red);
+    filter: drop-shadow(3px 5px 2px #FF00FF);
   }
 }
 
 .primaryButton{
+  width: fit-content;
   border-radius: var(--border-radius);
   box-shadow: 1px 1px rgb(var(--primary-glow));
   padding: 10px 15px;

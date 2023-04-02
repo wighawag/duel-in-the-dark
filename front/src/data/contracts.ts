@@ -2,278 +2,145 @@ export default {
   "Game": {
     "abi": [
       {
-        "name": null,
-        "type": "constructor",
         "inputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
-        "gas": null,
-        "_isFragment": true
+        "type": "constructor"
       },
       {
-        "type": "function",
-        "name": "acceptAndMove",
-        "constant": false,
         "inputs": [
           {
+            "internalType": "uint256",
             "name": "prevHash",
-            "type": "uint256",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint256",
-            "_isParamType": true
+            "type": "uint256"
           },
           {
+            "internalType": "bytes",
             "name": "proof",
-            "type": "bytes",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "bytes",
-            "_isParamType": true
+            "type": "bytes"
           },
           {
+            "internalType": "bool",
             "name": "hit",
-            "type": "bool",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "bool",
-            "_isParamType": true
+            "type": "bool"
           },
           {
+            "internalType": "uint256",
             "name": "new_hash",
-            "type": "uint256",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint256",
-            "_isParamType": true
+            "type": "uint256"
           },
           {
+            "internalType": "uint8",
             "name": "shot",
-            "type": "uint8",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint8",
-            "_isParamType": true
+            "type": "uint8"
           }
         ],
+        "name": "acceptAndMove",
         "outputs": [],
-        "payable": true,
         "stateMutability": "payable",
-        "gas": {
-          "type": "BigNumber",
-          "hex": "0x01ba8140"
-        },
-        "_isFragment": true
+        "type": "function"
       },
       {
-        "type": "function",
+        "inputs": [],
         "name": "enemy_shot",
-        "constant": true,
-        "inputs": [],
         "outputs": [
           {
-            "name": null,
-            "type": "uint8",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint8",
-            "_isParamType": true
+            "internalType": "uint8",
+            "name": "",
+            "type": "uint8"
           }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "gas": {
-          "type": "BigNumber",
-          "hex": "0x01ba8140"
-        },
-        "_isFragment": true
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "move",
-        "constant": false,
         "inputs": [
           {
+            "internalType": "bytes",
             "name": "proof",
-            "type": "bytes",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "bytes",
-            "_isParamType": true
+            "type": "bytes"
           },
           {
+            "internalType": "bool",
             "name": "hit",
-            "type": "bool",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "bool",
-            "_isParamType": true
+            "type": "bool"
           },
           {
+            "internalType": "uint256",
             "name": "new_hash",
-            "type": "uint256",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint256",
-            "_isParamType": true
+            "type": "uint256"
           },
           {
+            "internalType": "uint8",
             "name": "shot",
-            "type": "uint8",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint8",
-            "_isParamType": true
+            "type": "uint8"
           }
         ],
+        "name": "move",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
-        "gas": {
-          "type": "BigNumber",
-          "hex": "0x01ba8140"
-        },
-        "_isFragment": true
+        "type": "function"
       },
       {
-        "type": "function",
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
         "name": "players",
-        "constant": true,
-        "inputs": [
-          {
-            "name": null,
-            "type": "uint256",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint256",
-            "_isParamType": true
-          }
-        ],
         "outputs": [
           {
+            "internalType": "uint256",
             "name": "previous_hash",
-            "type": "uint256",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint256",
-            "_isParamType": true
+            "type": "uint256"
           },
           {
+            "internalType": "address payable",
             "name": "addr",
-            "type": "address",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "address",
-            "_isParamType": true
+            "type": "address"
           },
           {
+            "internalType": "uint8",
             "name": "numHit",
-            "type": "uint8",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint8",
-            "_isParamType": true
+            "type": "uint8"
           }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "gas": {
-          "type": "BigNumber",
-          "hex": "0x01ba8140"
-        },
-        "_isFragment": true
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "start",
-        "constant": false,
         "inputs": [
           {
+            "internalType": "uint256",
             "name": "locationHash",
-            "type": "uint256",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint256",
-            "_isParamType": true
+            "type": "uint256"
           }
         ],
+        "name": "start",
         "outputs": [],
-        "payable": true,
         "stateMutability": "payable",
-        "gas": {
-          "type": "BigNumber",
-          "hex": "0x01ba8140"
-        },
-        "_isFragment": true
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "turn",
-        "constant": true,
         "inputs": [],
+        "name": "turn",
         "outputs": [
           {
-            "name": null,
-            "type": "uint256",
-            "indexed": null,
-            "components": null,
-            "arrayLength": null,
-            "arrayChildren": null,
-            "baseType": "uint256",
-            "_isParamType": true
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
           }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "gas": {
-          "type": "BigNumber",
-          "hex": "0x01ba8140"
-        },
-        "_isFragment": true
+        "type": "function"
       },
       {
-        "type": "function",
-        "name": "withdraw",
-        "constant": false,
         "inputs": [],
+        "name": "withdraw",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
-        "gas": {
-          "type": "BigNumber",
-          "hex": "0x01ba8140"
-        },
-        "_isFragment": true
+        "type": "function"
       }
     ],
     "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3"

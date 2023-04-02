@@ -1,21 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useConnect } from "wagmi";
 import { InjectedConnector } from "wagmi/connectors/injected";
+import { usePrepareContractWrite, useContractWrite } from 'wagmi'
 import styles from "@/styles/Home.module.scss";
-
+import contracts from "../data/contracts"
 import Ship from "./Ship";
 import Image from "next/image";
+import { createGame } from "@/utils/zk/contracts";
+import { BigNumber } from "ethers";
+import { useNetwork, useSwitchNetwork, configureChains } from 'wagmi'
+import {hardhat} from '@wagmi/chains'
 
 export function Game() {
+  const { chain } = useNetwork()
+  const { chains, error, isLoading, pendingChainId, switchNetwork } = useSwitchNetwork()
   const [gameState, setGameState] = useState<
     "begin" | "waiting" | "during" | "win" | "lose"
   >("begin");
   const { address, isConnected } = useAccount();
   const { connect } = useConnect({ connector: new InjectedConnector() });
+  const [createGameHash, setCreateGameHash] = useState<BigNumber>();
+  const { config } = usePrepareContractWrite({
+    address: contracts.Game.address,
+    abi: contracts.Game.abi,
+    args: [createGameHash as BigNumber],
+    functionName: 'start',
+    enabled: Boolean(createGameHash),
+
+  })
+  const { write } = useContractWrite(config)
+
+  useEffect(() => {
+    (async () => {
+      const ret = await createGame(1)
+      setCreateGameHash(ret.first_hash)
+    })()
+  }, [])
 
   const beginGame = () =>{
     if(address)
-      setGameState("waiting")
+    {
+      createGame(1)
+      console.log(createGameHash)
+      write?.()
+      setGameState("during")
+    }
     else
       alert("You need to be connected to begin a game")
   }
@@ -45,6 +74,7 @@ export function Game() {
 
   return (
     <div>
+      <div className={styles.primaryButton}>Play</div>
       <Ship />
     </div>
   );

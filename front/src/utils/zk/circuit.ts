@@ -1,4 +1,3 @@
-import * as snarkjs from "snarkjs";
 import * as circomlibjs from "circomlibjs";
 import { solidityProof } from "./contracts";
 
@@ -15,7 +14,7 @@ export type Values = {
 };
 
 export async function generateProof(values: Values): Promise<string> {
-  const fullProof = await snarkjs.plonk.fullProve(
+  const fullProof = await (window as any).plonk.fullProve(
     {
       enemy_shot: values.enemy_shot,
       hit: values.hit,
