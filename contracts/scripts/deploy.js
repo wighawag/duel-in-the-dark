@@ -2,6 +2,7 @@ const hre = require("hardhat");
 const fs = require("fs");
 
 async function main() {
+  const GameArtifact = await hre.artifacts.readArtifact("Game");
   const Game = await hre.ethers.getContractFactory("Game");
   const game = await Game.deploy();
 
@@ -12,7 +13,7 @@ async function main() {
   const data = JSON.stringify(
     {
       Game: {
-        abi: Game.interface.fragments,
+        abi: GameArtifact.abi,
         address: game.address,
       },
     },
