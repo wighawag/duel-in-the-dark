@@ -1,14 +1,14 @@
-import { Html, Head, Main, NextScript } from 'next/document'
+import { Html, Head, Main, NextScript } from 'next/document';
 
 export default function Document() {
-  return (
-    <Html lang="en">
-      <Head />
-      <body>
-        <Main />
-        <NextScript />
-        <script src="/snarkjs.min.js"></script>
-      </body>
-    </Html>
-  )
+	return (
+		<Html lang="en">
+			<Head />
+			<body>
+				<Main />
+				<NextScript />
+				<script src="/snarkjs.min.js"></script>
+			</body>
+		</Html>
+	);
 }

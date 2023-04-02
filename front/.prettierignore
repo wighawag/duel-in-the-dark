@@ -1,0 +1,17 @@
+.DS_Store
+node_modules
+/build
+/package
+.env
+.env.*
+!.env.example
+.next
+
+# Ignore files for PNPM, NPM and YARN
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+public/verification_key.json
+public/snarkjs.min.js
+src/data/contracts.ts
