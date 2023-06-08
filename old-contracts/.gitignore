@@ -1,0 +1,21 @@
+# Compiler files
+cache/
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Docs
+docs/
+
+# Dotenv file
+.env
+
+# we generate them from the circuits folder, so we can ignore them
+# TODO use npm package ? so we can remove that
+# circuits
+
+# hardhat
+artifacts

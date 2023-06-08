@@ -1,5 +1,6 @@
 packages:
-  - "circuits"
-  - "web"
-  - "contracts"
-  - "front" 
+  - 'common'
+  - 'circuits'
+  - 'contracts'
+  - 'indexer'
+  - 'web'

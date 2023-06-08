@@ -1,0 +1,17 @@
+{
+	"name": "Duel In The Dark",
+	"title": "Duel In The Dark - Template for Decentralised Applications.",
+	"description": "Build and Deploy for Eternity. Duel In The Dark is a production-ready template for decentralised applications.",
+	"canonicalURL": "https://duel-in-the-dark.eth.limo",
+	"ENSName": "duel-in-the-dark.eth",
+	"themeColor": "#000000",
+	"appleStatusBarStyle": "black-translucent",
+	"icon": "static/icon.svg",
+	"maskableIcons": [
+		{
+			"src": "../maskable_icon_512x512.png",
+			"type": "image/png",
+			"sizes": "512x512"
+		}
+	]
+}
