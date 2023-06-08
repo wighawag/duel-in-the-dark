@@ -1,8 +1,8 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from 'chai';
 import { setupCircuit }  from "circuits";
-import circomlibjs from "circomlibjs";
-import snarkjs from "snarkjs";
+import * as circomlibjs from "circomlibjs";
+import * as snarkjs from "snarkjs";
 import {ethers} from 'hardhat';
 import {Game} from '../typechain-types'
 
@@ -39,7 +39,7 @@ async function do_move(circuit, contract, values) {
       new_location,
     },
   });
-  const fronContract = await contract.callStatic.enemy_shot();
+  const fronContract = await contract.enemy_shot.staticCall();
   console.log({ fronContract });
   await contract.move(
     await solidityProof(fullProof),

@@ -10,3 +10,4 @@ deployments/localhost
 
 coverage
 coverage.json
+typechain-types
