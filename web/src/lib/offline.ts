@@ -2,6 +2,7 @@ import {writable, type Readable} from 'svelte/store';
 import {config, extensions} from 'template-zk-game-contracts/rocketh/config.js';
 import deployVerifiers from 'template-zk-game-contracts/deploy/000_deploy_verifiers.js';
 import deployGreetingsRegistry from 'template-zk-game-contracts/deploy/001_deploy_greetings_registry.js';
+import deployHideAndSeek from 'template-zk-game-contracts/deploy/002_deploy_hide_and_seek.js';
 import {
 	createEmbeddedWorld,
 	restoreIsCoherent,
@@ -269,6 +270,7 @@ async function openWorld(chainId: number): Promise<EmbeddedWorld> {
 		scripts: [
 			{id: '000_deploy_verifiers', module: deployVerifiers},
 			{id: '001_deploy_greetings_registry', module: deployGreetingsRegistry},
+			{id: '002_deploy_hide_and_seek', module: deployHideAndSeek},
 		],
 		accounts: {deployer: DEPLOYER, admin: ADMIN},
 		initialBalances: {

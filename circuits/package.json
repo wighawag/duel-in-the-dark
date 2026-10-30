@@ -13,6 +13,10 @@
 			"types": "./dist/src/field.d.ts",
 			"default": "./dist/src/field.js"
 		},
+		"./hide-and-seek": {
+			"types": "./dist/src/hide-and-seek.d.ts",
+			"default": "./dist/src/hide-and-seek.js"
+		},
 		"./circuits": {
 			"types": "./dist/generated/index.d.ts",
 			"default": "./dist/generated/index.js"

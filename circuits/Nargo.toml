@@ -1,5 +1,5 @@
 [workspace]
 # Every circuit is one member. `pnpm build` compiles them all, then
-# scripts/generate.ts turns each into an artifact for the prover and a Solidity
-# verifier for the contracts.
-members = ["in_range"]
+# scripts/generate.ts turns each BINARY into an artifact for the prover and a
+# Solidity verifier for the contracts. Libraries (`commitment`) are shared code.
+members = ["commitment", "in_range", "answer_guess", "move_on_ring"]

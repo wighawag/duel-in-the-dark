@@ -1,0 +1,7 @@
+[package]
+name = "move_on_ring"
+type = "bin"
+authors = [""]
+
+[dependencies]
+commitment = { path = "../commitment" }
