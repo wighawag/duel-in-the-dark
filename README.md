@@ -1,3 +1,5 @@
+> **template-zk-game**: this template adds Noir zero-knowledge circuits for hidden-information games on top of jolly-roger. Start with [README.zk-game.md](./README.zk-game.md); everything below is inherited and still applies.
+
 # Full-Stack Onchain App Template
 
 A production-ready template for building full-stack decentralized applications with [SvelteKit](https://svelte.dev/), [Hardhat v3](https://hardhat.org/), and [hardhat-deploy v2](https://github.com/wighawag/hardhat-deploy) with the [rocketh](https://github.com/wighawag/rocketh) deployment system.
@@ -425,10 +427,10 @@ pnpm contracts:build
 
 ```typescript
 // Import ABIs
-import { Abi_GreetingsRegistry } from "jolly-roger-contracts/abis/GreetingsRegistry.js";
+import { Abi_GreetingsRegistry } from "template-zk-game-contracts/abis/GreetingsRegistry.js";
 
 // Import deployment info
-import GreetingsRegistry from "jolly-roger-contracts/deployments/sepolia/GreetingsRegistry.json";
+import GreetingsRegistry from "template-zk-game-contracts/deployments/sepolia/GreetingsRegistry.json";
 ```
 
 ## Linting
