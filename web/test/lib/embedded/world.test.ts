@@ -5,7 +5,6 @@ import {createEmbeddedWorld, type EmbeddedWorld} from '$lib/embedded';
 import buildTimeDeployments from '$lib/deployments';
 import {config, extensions} from 'template-zk-game-contracts/rocketh/config.js';
 import deployVerifiers from 'template-zk-game-contracts/deploy/000_deploy_verifiers.js';
-import deployGreetingsRegistry from 'template-zk-game-contracts/deploy/001_deploy_greetings_registry.js';
 import deployHideAndSeek from 'template-zk-game-contracts/deploy/002_deploy_hide_and_seek.js';
 
 // No `.svelte.` infix, so this runs in the `server` project: node, no DOM.
@@ -51,7 +50,6 @@ async function buildWorld(overrides?: {provision?: Provision}) {
 		rocketh: {config, extensions},
 		scripts: [
 			{id: '000_deploy_verifiers', module: deployVerifiers},
-			{id: '001_deploy_greetings_registry', module: deployGreetingsRegistry},
 			{id: '002_deploy_hide_and_seek', module: deployHideAndSeek},
 		],
 		accounts: {deployer: DEPLOYER, admin: ADMIN},
@@ -73,9 +71,7 @@ describe('an embedded world', () => {
 		const inTab = world.deployments.get();
 		expect(inTab.chain.id).toBe(CHAIN_ID);
 		expect(inTab.chain.id).not.toBe(buildTimeDeployments.chain.id);
-		expect(inTab.contracts.GreetingsRegistry.address).toMatch(
-			/^0x[0-9a-f]{40}$/,
-		);
+		expect(inTab.contracts.HideAndSeek.address).toMatch(/^0x[0-9a-f]{40}$/);
 
 		// NOT "and a different ADDRESS from the build-time one", which is false
 		// and was asserted here until the first developer ran the stack. This
@@ -89,7 +85,7 @@ describe('an embedded world', () => {
 		// records THIS world's is that the code is there, on this chain.
 		const code = await world.provider.request({
 			method: 'eth_getCode',
-			params: [inTab.contracts.GreetingsRegistry.address, 'latest'],
+			params: [inTab.contracts.HideAndSeek.address, 'latest'],
 		});
 		expect(code).toMatch(/^0x[0-9a-f]{2,}$/);
 
@@ -124,7 +120,7 @@ describe('an embedded world', () => {
 		const deployments = world.deployments.get();
 		await expect(
 			context.publicClient.getCode({
-				address: deployments.contracts.GreetingsRegistry.address,
+				address: deployments.contracts.HideAndSeek.address,
 			}),
 		).resolves.toMatch(/^0x[0-9a-f]+$/);
 		await expect(context.publicClient.getChainId()).resolves.toBe(CHAIN_ID);
@@ -144,7 +140,7 @@ describe('an embedded world', () => {
 				env as unknown as {
 					deployments: Record<string, {address: string}>;
 				}
-			).deployments.GreetingsRegistry.address;
+			).deployments.HideAndSeek.address;
 			expect(accounts.deployer).toBe(DEPLOYER);
 			// It can act on the chain, which is what makes it able to give
 			// anything: gas here, an ERC20 stake or an identity token in a game.
@@ -158,7 +154,7 @@ describe('an embedded world', () => {
 		world = await buildWorld({provision});
 
 		expect(deployedWhenCalled).toBe(
-			world.deployments.get().contracts.GreetingsRegistry.address,
+			world.deployments.get().contracts.HideAndSeek.address,
 		);
 		expect(balanceSet).toBe(10000n);
 		const balance = await world.provider.request({

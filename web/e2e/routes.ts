@@ -22,7 +22,7 @@
  */
 export const SMOKE_ROUTES = [
 	'/',
-	'/demo/',
+	'/hide-and-seek/',
 	'/transactions/',
 	'/explorer/',
 ] as const;

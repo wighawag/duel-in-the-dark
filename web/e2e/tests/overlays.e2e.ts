@@ -57,7 +57,7 @@ describe('View overlays and navigation', () => {
 	test('the back gesture closes it instead of leaving the page', async ({
 		page,
 	}) => {
-		await page.goto('/demo/');
+		await page.goto('/hide-and-seek/');
 		await openDrawer(page);
 		const urlWithOverlayOpen = page.url();
 

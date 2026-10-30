@@ -1,4 +1,5 @@
 import {expect, type Page} from '@playwright/test';
+import {HARMLESS_WRITE, sendHarmlessWrite, writeCard} from './contracts-page';
 
 /**
  * A wallet that HOLDS a transaction request until the test lets it go.
@@ -295,7 +296,8 @@ export function walletWaitingOn(
  * GreetingsRegistry, and a descendant that does not deploy it inherited an
  * assertion for a function it never calls.
  */
-export const STALLED_SEND_NAME = 'setMessage';
+// This template sends the game contract's harmless write: see contracts-page.ts.
+export const STALLED_SEND_NAME = HARMLESS_WRITE;
 
 /**
  * Get this app to hand the stalling wallet a transaction, and leave it holding
@@ -344,7 +346,7 @@ export async function sendAndStall(
 		 * a convenience.
 		 *
 		 * WHAT IT IS HAS TO BE THE APP'S BUSINESS, not the caller's. This app fills
-		 * `setMessage`'s string argument, so any value does; a descendant's write takes an ADDRESS,
+		 * `revokeDelegate`'s ADDRESS argument (see contracts-page.ts),
 		 * and a suite that hardcoded 'sending indicator' there filled an invalid
 		 * field, so the form never submitted and nothing ever reached the wallet -
 		 * the same failure this whole helper exists to stop, one layer in. A suite
@@ -368,20 +370,7 @@ export async function sendAndStall(
 	// Stated HERE rather than in a suite, because two suites need it and stating
 	// it in one of them is precisely how the other spent thirty seconds waiting
 	// for a wallet that was never going to be asked.
-	await page.goto('/contracts');
-
-	const writeTab = page.getByRole('tab', {name: 'Write'});
-	await expect(writeTab).toBeVisible({timeout: 30_000});
-	await writeTab.click();
-
-	await expect(page.getByText('setMessage nonpayable')).toBeVisible({
-		timeout: 30_000,
-	});
-	await writeForm(page)
-		.getByPlaceholder('Enter text...')
-		.first()
-		.fill(options?.input ?? 'a request nobody answers');
-	await executeButton(page).click();
+	await sendHarmlessWrite(page, options?.input);
 
 	await chooseStallingWallet(page);
 
@@ -405,11 +394,7 @@ export async function sendAndStall(
  * those, since "executing" does not contain "execute", and a test then reads as
  * though the button had vanished at exactly the moment it was busy.
  */
-export const writeForm = (page: Page) =>
-	page
-		.locator('[class*="card"], [class*="function"]')
-		.filter({has: page.getByText('setMessage nonpayable')})
-		.first();
+export const writeForm = (page: Page) => writeCard(page);
 
 export const executeButton = (page: Page) =>
 	writeForm(page).locator('button', {hasText: /execut/i});

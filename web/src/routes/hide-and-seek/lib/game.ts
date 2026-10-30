@@ -1,9 +1,6 @@
 import {get, writable, type Readable} from 'svelte/store';
 import type {Context} from '$lib/context/types';
-import {
-	createPollingStore,
-	type PollingStore,
-} from '$lib/core/connection/polling-store';
+import type {GameStateStore, MatchSummary} from '$lib/game/state';
 import {getZK, getCircuits} from '$lib/zk';
 import type {
 	HideAndSeek,
@@ -22,42 +19,14 @@ import {
 /**
  * The reference game's client: what the /hide-and-seek page shows and does.
  *
- * Reads are a polling store over the most recent matches. Every action is a
+ * Reads are the app context's `onchainState` (see $lib/game). Every action is a
  * method that proves what it has to (in the browser), stores any new secret
  * BEFORE sending (see secrets.ts), sends through the right executor (see
  * send.ts) and refreshes. The page renders this and wires buttons to it.
  */
 
-export const STATUS = [
-	'None',
-	'Open',
-	'Active',
-	'Finished',
-	'Cancelled',
-] as const;
-export type MatchStatus = (typeof STATUS)[number];
-
-/** How many of the latest matches the lobby lists. */
-const RECENT = 20;
-
-export type MatchSummary = {
-	id: bigint;
-	status: MatchStatus;
-	turnSeat: number;
-	actionPoints: number;
-	awaiting: number;
-	winner: number;
-	deadline: number;
-	stake: bigint;
-	seats: readonly {player: `0x${string}`; commitment: `0x${string}`}[];
-	pendingGuess: number;
-};
-
-export type GameView = {
-	player?: `0x${string}`;
-	balance: bigint;
-	matches: MatchSummary[];
-};
+export {STATUS} from '$lib/game/state';
+export type {MatchStatus, MatchSummary, GameView} from '$lib/game/state';
 
 export type Activity =
 	| {step: 'idle'}
@@ -66,7 +35,8 @@ export type Activity =
 	| {step: 'failed'; action: string; message: string};
 
 export type HideAndSeekGame = {
-	view: PollingStore<GameView>;
+	/** the app context's onchainState: the game's matches, polled */
+	view: GameStateStore;
 	activity: Readable<Activity>;
 	/** The seat `player` holds in `match`, if any. */
 	seatOf(match: MatchSummary, player: string | undefined): number | undefined;
@@ -86,7 +56,8 @@ export type HideAndSeekGame = {
 };
 
 export function createHideAndSeekGame(
-	context: SendDeps & Pick<Context, 'publicClient' | 'deployments'>,
+	context: SendDeps &
+		Pick<Context, 'publicClient' | 'deployments' | 'onchainState'>,
 	options: {
 		/** where secrets are kept; the browser's localStorage unless a test says otherwise */
 		storage?: Pick<Storage, 'getItem' | 'setItem'>;
@@ -105,57 +76,7 @@ export function createHideAndSeekGame(
 		build: (player: `0x${string}`) => WriteRequest<GameAbi>,
 	) => sendAsSignerTo<GameAbi>(deps, action, build);
 
-	const view = createPollingStore<GameView>(
-		async () => {
-			const c = contract();
-			const $connection = get(context.connection);
-			const player =
-				'account' in $connection ? $connection.account.address : undefined;
-			const last = await context.publicClient.readContract({
-				...c,
-				functionName: 'lastMatchId',
-			});
-			const ids: bigint[] = [];
-			for (let id = last; id > 0n && ids.length < RECENT; id--) ids.push(id);
-			const matches = await Promise.all(
-				ids.map(async (id) => {
-					const [m, pendingGuess] = await Promise.all([
-						context.publicClient.readContract({
-							...c,
-							functionName: 'getMatch',
-							args: [id],
-						}),
-						context.publicClient.readContract({
-							...c,
-							functionName: 'pendingGuess',
-							args: [id],
-						}),
-					]);
-					return {
-						id,
-						status: STATUS[m.state.status] ?? 'None',
-						turnSeat: m.state.turnSeat,
-						actionPoints: m.state.actionPoints,
-						awaiting: m.state.awaiting,
-						winner: m.state.winner,
-						deadline: Number(m.state.deadline),
-						stake: m.state.stake,
-						seats: m.seats,
-						pendingGuess,
-					} satisfies MatchSummary;
-				}),
-			);
-			const balance = player
-				? await context.publicClient.readContract({
-						...c,
-						functionName: 'balanceOf',
-						args: [player],
-					})
-				: 0n;
-			return {player, balance, matches};
-		},
-		{fetchInterval: 3_000},
-	);
+	const view = context.onchainState;
 
 	const activity = writable<Activity>({step: 'idle'});
 

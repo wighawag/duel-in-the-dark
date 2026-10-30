@@ -6,12 +6,13 @@ import {createContext} from '$lib/context/index';
 import {createEmbeddedWorld, type EmbeddedWorld} from '$lib/embedded';
 import {config, extensions} from 'template-zk-game-contracts/rocketh/config.js';
 import deployVerifiers from 'template-zk-game-contracts/deploy/000_deploy_verifiers.js';
-import deployGreetingsRegistry from 'template-zk-game-contracts/deploy/001_deploy_greetings_registry.js';
 import deployHideAndSeek from 'template-zk-game-contracts/deploy/002_deploy_hide_and_seek.js';
 import {createZK} from 'template-zk-game-circuits';
 import {circuits} from 'template-zk-game-circuits/circuits';
 import {createHideAndSeek} from 'template-zk-game-circuits/hide-and-seek';
 import {createHideAndSeekGame} from '../../../src/routes/hide-and-seek/lib/game';
+import {createGameState} from '$lib/game/state';
+import {readable} from 'svelte/store';
 import {createSecretStore} from '../../../src/routes/hide-and-seek/lib/secrets';
 import {roleIn} from '../../../src/routes/hide-and-seek/lib/view';
 
@@ -51,7 +52,6 @@ describe('/hide-and-seek against an embedded chain', () => {
 			rocketh: {config, extensions},
 			scripts: [
 				{id: '000_deploy_verifiers', module: deployVerifiers},
-				{id: '001_deploy_greetings_registry', module: deployGreetingsRegistry},
 				{id: '002_deploy_hide_and_seek', module: deployHideAndSeek},
 			],
 			accounts: {deployer: KEYS[0], admin: KEYS[1]},
@@ -63,7 +63,15 @@ describe('/hide-and-seek against an embedded chain', () => {
 			establishConnection: world.establishConnection,
 		});
 		const storage = memoryStorage();
-		const game = createHideAndSeekGame(context, {storage});
+		// The app's onchainState, built as $lib/game/app.ts builds it but without
+		// the fetch gate: nothing is connected here, and the gate (correctly) keeps
+		// an unconnected app from reading.
+		const onchainState = createGameState({
+			publicClient: context.publicClient,
+			deployments: context.deployments,
+			account: readable(undefined),
+		});
+		const game = createHideAndSeekGame({...context, onchainState}, {storage});
 		const deployments = world.deployments.get();
 		const HideAndSeek = deployments.contracts.HideAndSeek;
 		const wallets = accounts.map((account) =>

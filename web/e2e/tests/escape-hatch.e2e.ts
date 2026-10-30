@@ -1,4 +1,5 @@
 import type {Page} from '@playwright/test';
+import {createHash} from 'node:crypto';
 import {test, expect, describe} from '../fixtures/test';
 import {
 	approveHeldTransaction,
@@ -11,6 +12,18 @@ import {
 	STALLING_WALLET_NAME,
 	writeForm,
 } from '../fixtures/stalling-wallet';
+
+/**
+ * What each test sends, as THIS template's write takes it: an address
+ * (`revokeDelegate`, see fixtures/contracts-page.ts). Derived from the test's
+ * message so that each test still sends something distinctive, and a test that
+ * asserts its input survived still has one value to look for. A plain message
+ * would not be a valid address, the form would never submit, and nothing would
+ * ever reach the wallet.
+ */
+function inputFor(message: string): string {
+	return '0x' + createHash('sha256').update(message).digest('hex').slice(0, 40);
+}
 
 /**
  * The escape hatch, driven through the window it exists for (ADR-0004, `work`).
@@ -133,7 +146,7 @@ describe('Stopping waiting for the wallet', () => {
 	 */
 	async function sendAndStall(page: Page, message: string) {
 		await installStallingWallet(page, {nodeUrl});
-		await stallARequest(page, {input: message});
+		await stallARequest(page, {input: inputFor(message)});
 		await expect(waitingModal(page)).toBeVisible({
 			timeout: 30_000,
 		});
@@ -223,9 +236,9 @@ describe('Stopping waiting for the wallet', () => {
 		await expect(execute).toHaveText(/^execute$/i, {timeout: 15_000});
 		// And what they typed is still there. They have not been told anything
 		// happened, so taking their text away would be the app deciding it did.
-		await expect(
-			writeForm(page).getByPlaceholder('Enter text...').first(),
-		).toHaveValue(message);
+		await expect(writeForm(page).getByPlaceholder('0x...').first()).toHaveValue(
+			inputFor(message),
+		);
 		// Released without withdrawing anything: the wallet still has the request.
 		expect(await isHoldingTransaction(page)).toBe(true);
 	});

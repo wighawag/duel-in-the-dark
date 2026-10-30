@@ -9,7 +9,7 @@ import {test, expect, describe} from '../fixtures/test';
 // this is the gate for SSR/CSR *divergence*, which a successful build cannot
 // catch.
 describe('Hydration', () => {
-	for (const path of ['/', '/demo/']) {
+	for (const path of ['/', '/hide-and-seek/']) {
 		test(`hydrates ${path} without a mismatch`, async ({page}) => {
 			const complaints: string[] = [];
 			const record = (text: string) => {

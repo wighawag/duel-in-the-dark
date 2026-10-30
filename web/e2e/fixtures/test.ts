@@ -404,13 +404,6 @@ export interface WalletFixtures {
 	waitForTransaction: (page: Page) => Promise<void>;
 
 	/**
-	 * Submit a greeting and wait until it is visible and settled on-chain.
-	 * Preferred over open-coding fill/click/waitForTransaction: it fails at the
-	 * step that actually broke instead of at a later assertion.
-	 */
-	submitGreeting: (page: Page, message: string) => Promise<void>;
-
-	/**
 	 * Complete the flow that authorises this browser to post in the account's
 	 * name (and funds the signer in the same transaction), if the app is asking
 	 * for it. Returns whether it was asking.
@@ -1063,60 +1056,6 @@ async function authoriseBrowser(
 	};
 }
 
-/**
- * Submit a greeting and wait until it is on-chain and settled.
- *
- * Tests previously open-coded fill -> click -> waitForTransaction and then
- * asserted the text separately. Each step could silently no-op, so the failure
- * always landed on the final assertion regardless of which step actually broke.
- * Doing it in one place means the error names the step that failed.
- *
- * The first send from a fresh browser does not reach the chain: the signer is
- * not a delegate yet, so the app opens the authorisation flow instead. That is
- * the state the app is designed to have, not an error, so this completes it and
- * sends again rather than failing.
- */
-async function submitGreeting(page: Page, message: string): Promise<void> {
-	const input = page.getByPlaceholder('Enter your greeting...');
-	await expect(input, 'greeting input should be ready').toBeEnabled({
-		timeout: 30_000,
-	});
-	await input.fill(message);
-
-	const sendButton = page.getByRole('button', {name: /send/i});
-	await expect(
-		sendButton,
-		'send should be enabled once input has text',
-	).toBeEnabled({timeout: 30_000});
-	await sendButton.click();
-
-	// A write can surface a funding prompt before it reaches the chain.
-	await handleInsufficientFundsModal(page);
-
-	// A first send from a fresh browser is answered with the authorisation flow
-	// instead of reaching the chain. The send is not lost: it waits, and the app
-	// offers it back once this browser may act. So there is nothing to re-click.
-	const authorised = await authoriseBrowser(page);
-	if (authorised.offered) {
-		expect(
-			authorised.resumed,
-			'the interrupted send should be offered back, not dropped',
-		).toBe(true);
-		await handleInsufficientFundsModal(page);
-	}
-
-	// The row appears optimistically with a pending spinner, then settles.
-	const row = page.locator(MESSAGE_ROW).filter({hasText: message});
-	await expect(
-		row,
-		`greeting "${message}" should appear in the list`,
-	).toBeVisible({timeout: 60_000});
-	await expect(
-		row.locator(MESSAGE_PENDING),
-		`greeting "${message}" should settle on-chain`,
-	).toHaveCount(0, {timeout: 60_000});
-}
-
 export const test = base.extend<WalletFixtures & WalletOptions>({
 	// Option fixture: which burner account the connect flow selects.
 	// Override per file/describe with `test.use({walletAccountIndex: 1})`.
@@ -1189,11 +1128,13 @@ export const test = base.extend<WalletFixtures & WalletOptions>({
 		await fundWallets();
 
 		// Navigate to demo page
-		await page.goto('/demo');
+		await page.goto('/hide-and-seek/');
 
 		// Wait for app to initialize
-		const input = page.getByPlaceholder('Enter your greeting...');
-		await expect(input).toBeVisible({timeout: 30000});
+		// The game page is up once its heading renders.
+		await expect(
+			page.getByRole('heading', {name: 'Hide and Seek'}),
+		).toBeVisible({timeout: 30000});
 
 		// Ask the app whether it is connected, rather than inferring it from the
 		// navbar balance: the balance span is empty while loading and hidden below
@@ -1235,8 +1176,6 @@ export const test = base.extend<WalletFixtures & WalletOptions>({
 		await fundAppSenders(page);
 
 		// The input must be interactive before the test starts driving it.
-		await expect(input).toBeEnabled({timeout: 30_000});
-
 		await use(page);
 	},
 
@@ -1264,9 +1203,6 @@ export const test = base.extend<WalletFixtures & WalletOptions>({
 	/**
 	 * Provides the atomic submit-and-settle helper.
 	 */
-	submitGreeting: async ({}, use) => {
-		await use(submitGreeting);
-	},
 
 	authoriseBrowser: async ({}, use) => {
 		await use(authoriseBrowser);

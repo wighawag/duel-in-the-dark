@@ -205,14 +205,6 @@
 				Home
 			</a>
 			<a
-				href={route('/demo/')}
-				class="rounded px-2 py-1 text-sm transition-colors {isActive('/demo')
-					? 'bg-primary/20 font-semibold text-primary'
-					: 'text-muted-foreground hover:text-foreground hover:underline'}"
-			>
-				Demo
-			</a>
-			<a
 				href={route('/hide-and-seek/')}
 				class="rounded px-2 py-1 text-sm transition-colors {isActive(
 					'/hide-and-seek',

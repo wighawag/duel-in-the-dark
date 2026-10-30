@@ -57,79 +57,48 @@
 # seventeen paths, and a cascade had already paid for it.
 
 # ---------------------------------------------------------------------------
-# WHY THE MIDDLE GUARD ABOVE HAD TO BE WRITTEN, from this repo's own record.
-# The middle one is the one that had to be written, and why is worth knowing.
-# THIS FILE USED TO SAY "this template omits nothing - it is where the files come
-# from", which was false: this repo is a descendant of template-svelte-shadcn like
-# any other, and it drops three inherited paths. The other two guards are blind to
-# that, because a path nobody listed and a path that never existed look identical
-# from inside one repo. Measured across this tree on 2026-09-25, EVERY list was
-# incomplete - this one 0 of 3, template-commit-reveal 0 of 17, reveal-or-die 4 of
-# 52, bleeps 1 of 21, mandalas 2 of 24 - and one cascade had already paid for it.
-# See the finding of that date on the `work` branch.
-
-web/src/lib/Head.svelte
-# REPLACED, not dropped: the same component is `web/src/lib/core/metadata/Head.svelte`.
-# It moved because it reads the document's location to build a canonical URL, and
-# in `core/` it cannot ask the framework for that - it takes the
-# `documentLocation` CAPABILITY instead, which the layout provides. That is the
-# whole point of the boundary ADR-0005 draws.
+# WHAT template-zk-game DROPS FROM ITS STEM (jolly-roger, branch `integration`).
 #
-# This one is already documented in a second place, deliberately:
-# `web/test/framework-boundary.test.ts` explains that the stem carries a
-# KNOWN_LEAKS entry for this path and this repo does not need one, BECAUSE of the
-# move above. That note is about the leak list; this entry is about the file. Both
-# are true and the cascade meets them at different moments.
+# One decision, many files: THIS TEMPLATE IS A GAME, NOT THE GREETINGS DEMO. The
+# same decision template-commit-reveal took, for the same reasons, and the same
+# shape of list. The concrete trigger here: an authorisation of this browser's
+# signer is only good at the ONE contract the app registers it with
+# (`delegationRegistry`), and every action of a game must reach the GAME
+# contract, so the demo's contract cannot also be the registry. Measured, not
+# assumed: a two-player match in a real browser failed with the signer refused
+# by HideAndSeek, and passed once the registry was the game.
 
-web/static/icon.png
-# This repo has its own logo and it is a VECTOR: `web/static/icon.svg`, from which
-# `pnpm generate-pwa-icons` renders every raster the PWA needs into `static/pwa/`
-# (favicons, maskable icons, apple-touch). A single stem-supplied png is both the
-# wrong artwork and the wrong format.
-#
-# MIND THE STALE SCRIPT THIS LEFT BEHIND, which is a real thing to trip over:
-# `web/package.json` still carries the stem's `generate-pwa-icons-and-tags`,
-# spelled `pwag static/icon.png ...`, so running it fails on a missing file. This
-# repo's `prepare` was re-pointed at the svg script and the old one was never
-# removed. Recorded rather than deleted here because a script is code and this is
-# a list; see the finding on the `work` branch.
+# THE DEMO'S CONTRACT, and everything that deploys, scripts or tests it. The
+# game's verifiers and HideAndSeek replace it; the suites that only needed "some
+# transaction" now send a harmless one through /contracts (see
+# web/e2e/fixtures/contracts-page.ts).
+contracts/src/GreetingsRegistry
+contracts/deploy/001_deploy_greetings_registry.ts
+contracts/scripts/setMessage.ts
+contracts/test/js/GreetingsRegistry.test.ts
+contracts/test/solidity/GreetingsRegistry
 
-zellij.kdl
-# MOVED INTO `dev/`, where it is one of three layouts rather than the only one:
-# `dev/zellij.kdl`, `dev/zellij-attach.kdl` and `dev/zellij-remote-chain.kdl`.
-# This repo runs a chain as well as a web app, so "the dev layout" stopped being a
-# single thing, and `package.json` names the files in `dev/` directly. The stem
-# has one layout at the root and no reason to move it.
+# THE DEMO'S ROUTES. `/hide-and-seek` is the game, `/zk` the prover demo.
+# `/offline-demo` embedded `/demo` on an in-tab chain; a 2-player match against
+# nobody is not a game, so it went with it, and `$lib/offline.ts` (which only it
+# used) with it. The in-tab chain itself (`$lib/embedded`) stays: the tests use it.
+web/src/routes/demo
+web/src/routes/offline-demo
+web/src/lib/offline.ts
 
-# ---------------------------------------------------------------------------
-# AND BELOW THIS LINE, WHAT THE BRANCH DROPS FROM ITS OWN STEM. Everything above
-# is what `jolly-roger` drops from `template-svelte-shadcn` and is carried by
-# every branch here. `with/local-signer`'s stem is `main`, so an entry that is
-# true of this branch and not of `main` belongs here and nowhere higher.
+# THE HALF OF THE CONTEXT A FORK IS MEANT TO REPLACE, and its two demo-only
+# modules. `$app-specific` points at `web/src/lib/game/app.ts` instead (see
+# svelte.config.js); `$lib/game/state.ts` is this app's onchain state.
+web/src/lib/context/app.ts
+web/src/lib/onchain/state.ts
+web/src/lib/view/index.ts
 
-contracts/deployments/sepolia
-# DROPPED BY `with/local-signer` FROM `main`: main has a Sepolia deployment and
-# this branch does not. Those records describe MAIN's contracts - they arrived by
-# cascade and were never redeployed - so the ABI they carry has no
-# `setMessageFor` and none of the delegation functions this branch's
-# GreetingsRegistry defines. The practical harm was `pnpm attach sepolia`, which
-# exported an ABI belonging to another contract set; the only symptom was a type
-# error several files away, in routes/demo/lib/setGreeting.ts, saying a function
-# did not exist. Deleting says the true thing: THIS BRANCH HAS NO SEPOLIA
-# DEPLOYMENT. When it gets one it belongs under its own environment name
-# (`sepolia-signer`) and on the branch that owns the deployment.
-#
-# A DIRECTORY ENTRY, because the whole directory is what went - all four records
-# under it - which is the case that entry form is for.
-#
-# `with/hosted-account` and `integration` inherit the deletion AND this line
-# through their merges from here, and both readings stay true: neither carries a
-# Sepolia deployment. `with/embedded-chain` and `website` still have main's.
-#
-# THE REASON WAS WRITTEN DOWN IN AUGUST, IN THE ONE PLACE NOTHING COULD FIND IT,
-# which is this file's entire argument. Commit b947f89 (2026-08-17) says all of
-# the above and ends: "Expect a modify/delete conflict here whenever main
-# redeploys sepolia. Resolve it by keeping the deletion." That is the sentence
-# somebody needs mid-merge, and until now it lived only in a commit message five
-# weeks back. `scripts/check-omissions.mjs` reported these four paths on the
-# cascade that delivered it to this branch, 2026-09-25.
+# THE DEMO'S OWN SUITES, which reached their subjects through the greetings page.
+# Delegation is still asserted, on chain (contracts/test/js/HideAndSeek.test.ts)
+# and in a browser by web/e2e/tests/hide-and-seek.e2e.ts, which cannot play a
+# turn unless the signer is a registered delegate.
+web/e2e/tests/demo.e2e.ts
+web/e2e/tests/delegation.e2e.ts
+web/test/routes/demo
+web/test/lib/onchain/state.test.ts
+web/test/lib/view/pending-operations.test.ts

@@ -1,5 +1,6 @@
 import type {Page} from '@playwright/test';
 import {test, expect, describe, type AuthoriseBrowser} from '../fixtures/test';
+import {sendHarmlessWrite} from '../fixtures/contracts-page';
 
 /**
  * The transaction inspector, driven the way a user reaches it.
@@ -48,14 +49,19 @@ describe('Transaction inspector', () => {
 	async function submitAndOpenTransactions(
 		page: Page,
 		authoriseBrowser: AuthoriseBrowser,
-		message: string,
+		// What the test calls its send. Kept for the callers' readability: this
+		// template's send has no free text (see fixtures/contracts-page.ts).
+		_label: string,
 	) {
-		const input = page.getByPlaceholder('Enter your greeting...');
-		await expect(input).toBeEnabled({timeout: 30000});
-		await input.fill(message);
-		await page.getByRole('button', {name: /send/i}).click();
-
-		await authoriseBrowser(page);
+		await sendHarmlessWrite(page);
+		// NOT `authoriseBrowser` here, though the signature keeps it for the
+		// callers. The greetings demo's send went through the local signer, which
+		// BLOCKED until the browser was authorised, so the transaction only left
+		// once that was done and the badge below was sure to be up. This send is
+		// from the ACCOUNT (the route the suite asserts) and needs no authorisation:
+		// waiting for a dialog that never comes lets the transaction be mined, and
+		// the badge, which only shows while something is pending, is gone.
+		void authoriseBrowser;
 
 		await expect(
 			page.locator('[data-testid="pending-operations"]'),
