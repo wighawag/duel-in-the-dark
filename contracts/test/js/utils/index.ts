@@ -1,4 +1,5 @@
 import {Abi_GreetingsRegistry} from '../../../generated/abis/GreetingsRegistry.js';
+import {Abi_InRangeVerifier} from '../../../generated/abis/InRangeVerifier.js';
 import {loadAndExecuteDeploymentsFromFiles} from '../../../rocketh/environment.js';
 import {EthereumProvider} from 'hardhat/types/providers';
 
@@ -14,10 +15,12 @@ export function setupFixtures(provider: EthereumProvider) {
 			//  we type them manually assuming the artifact is still matching
 			const GreetingsRegistry =
 				env.get<Abi_GreetingsRegistry>('GreetingsRegistry');
+			const InRangeVerifier = env.get<Abi_InRangeVerifier>('InRangeVerifier');
 
 			return {
 				env,
 				GreetingsRegistry,
+				InRangeVerifier,
 				namedAccounts: env.namedAccounts,
 				unnamedAccounts: env.unnamedAccounts,
 			};

@@ -3,8 +3,9 @@ import {get} from 'svelte/store';
 import {createContext} from '$lib/context/index';
 import {createEmbeddedWorld, type EmbeddedWorld} from '$lib/embedded';
 import buildTimeDeployments from '$lib/deployments';
-import {config, extensions} from 'jolly-roger-contracts/rocketh/config.js';
-import deployGreetingsRegistry from 'jolly-roger-contracts/deploy/001_deploy_greetings_registry.js';
+import {config, extensions} from 'template-zk-game-contracts/rocketh/config.js';
+import deployVerifiers from 'template-zk-game-contracts/deploy/000_deploy_verifiers.js';
+import deployGreetingsRegistry from 'template-zk-game-contracts/deploy/001_deploy_greetings_registry.js';
 
 // No `.svelte.` infix, so this runs in the `server` project: node, no DOM.
 // That is not a compromise, it is the harness this deserves - webevm's core
@@ -48,6 +49,7 @@ async function buildWorld(overrides?: {provision?: Provision}) {
 		},
 		rocketh: {config, extensions},
 		scripts: [
+			{id: '000_deploy_verifiers', module: deployVerifiers},
 			{id: '001_deploy_greetings_registry', module: deployGreetingsRegistry},
 		],
 		accounts: {deployer: DEPLOYER, admin: ADMIN},

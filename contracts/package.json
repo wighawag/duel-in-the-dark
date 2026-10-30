@@ -1,6 +1,7 @@
 {
-	"name": "jolly-roger-contracts",
+	"name": "template-zk-game-contracts",
 	"version": "0.0.0",
+	"license": "AGPL-3.0-only",
 	"type": "module",
 	"exports": {
 		"./deploy/*": "./dist/deploy/*",
@@ -16,7 +17,8 @@
 		"deployments"
 	],
 	"dependencies": {
-		"@etherplay/delegation": "^0.1.1"
+		"@etherplay/delegation": "^0.1.1",
+		"template-zk-game-circuits": "workspace:*"
 	},
 	"devDependencies": {
 		"@nomicfoundation/hardhat-keystore": "^3.0.13",

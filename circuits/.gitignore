@@ -1,0 +1,4 @@
+# nargo output; the committed form of a circuit is generated/
+target/
+dist/
+node_modules/

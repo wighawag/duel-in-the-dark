@@ -1,0 +1,50 @@
+{
+	"name": "template-zk-game-circuits",
+	"version": "0.0.0",
+	"license": "AGPL-3.0-only",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/src/index.d.ts",
+			"default": "./dist/src/index.js"
+		},
+		"./field": {
+			"types": "./dist/src/field.d.ts",
+			"default": "./dist/src/field.js"
+		},
+		"./circuits": {
+			"types": "./dist/generated/index.d.ts",
+			"default": "./dist/generated/index.js"
+		}
+	},
+	"files": [
+		"dist",
+		"generated",
+		"src"
+	],
+	"dependencies": {
+		"@aztec/bb.js": "5.3.0",
+		"@noir-lang/noir_js": "1.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^26.2.0",
+		"as-soon": "^0.1.6",
+		"prettier": "^3.9.6",
+		"tsx": "^4.23.12",
+		"typescript": "~6.0.3"
+	},
+	"scripts": {
+		"prepare": "tsc",
+		"---------------------- NEEDS THE DEVSHELL (nix develop) ----------------------": "",
+		"compile": "nargo compile --workspace",
+		"test:circuits": "nargo test --workspace",
+		"build": "pnpm compile && pnpm generate && tsc",
+		"---------------------- NO NARGO NEEDED ----------------------": "",
+		"generate": "tsx scripts/generate.ts",
+		"typescript": "tsc",
+		"test": "tsx --test test/*.test.ts",
+		"format": "prettier --write .",
+		"format:check": "prettier --check ."
+	}
+}
