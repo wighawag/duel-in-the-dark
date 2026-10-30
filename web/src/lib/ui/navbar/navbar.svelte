@@ -212,6 +212,24 @@
 			>
 				Demo
 			</a>
+			<a
+				href={route('/hide-and-seek/')}
+				class="rounded px-2 py-1 text-sm transition-colors {isActive(
+					'/hide-and-seek',
+				)
+					? 'bg-primary/20 font-semibold text-primary'
+					: 'text-muted-foreground hover:text-foreground hover:underline'}"
+			>
+				Hide and Seek
+			</a>
+			<a
+				href={route('/zk/')}
+				class="rounded px-2 py-1 text-sm transition-colors {isActive('/zk')
+					? 'bg-primary/20 font-semibold text-primary'
+					: 'text-muted-foreground hover:text-foreground hover:underline'}"
+			>
+				ZK
+			</a>
 		</span>
 		<div class="flex items-center space-x-2">
 			{#if repoURL}

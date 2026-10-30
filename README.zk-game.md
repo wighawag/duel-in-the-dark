@@ -14,7 +14,12 @@ It extends [jolly-roger](https://github.com/wighawag/jolly-roger) (its `integrat
 | `circuits/generated/` | Committed circuit artifacts, imported by the web and the tests. |
 | `contracts/src/verifiers/` | Committed, generated verifiers: one per circuit plus a shared base. |
 | `contracts/deploy/000_deploy_verifiers.ts` | Deploys the shared libraries once and one verifier per circuit. |
+| `contracts/src/zk-game/ZKMatches.sol` | The match framework every game inherits (see below). |
+| `contracts/src/HideAndSeek/` | The reference game: the smallest game that uses all of the framework. |
+| `circuits/commitment/` | The one commitment scheme, a Noir library every circuit uses. |
+| `circuits/src/hide-and-seek.ts` | The game's client side: secrets and proofs, shared by the web and the tests. |
 | `web/src/lib/zk/` | The app's lazily loaded prover. |
+| `web/src/routes/hide-and-seek/` | Play the reference game: lobby, match, backup of hidden state. |
 | `web/src/routes/zk/` | A demo: commit to a value, prove it is in range, verify on chain. |
 
 ## The pipeline
@@ -38,6 +43,14 @@ pnpm circuits:build    # nargo compile + generate + tsc
 pnpm circuits:test     # nargo test + the prover tests
 ```
 
+## The match framework
+
+`ZKMatches` owns what does not depend on a game's rules: many concurrent 2-seat matches with an escrowed ETH stake; a commitment per seat standing for that player's hidden state, replaced only through a proven transition; alternating turns paid in action points; **queries**, actions the other seat must answer with a proof before the turn goes on; a deadline on every wait, after which anyone can end the match against whoever was being waited for; pull payouts; and delegation, so the browser's signer plays without wallet prompts while only the player can withdraw.
+
+A game inherits it and writes its actions. The one rule that matters: **a proof's public inputs are built from storage and the pending query, never taken from the caller**; only the claimed result (a hit, a new commitment) comes from the player, and the proof binds it. `HideAndSeek` is the worked example, and ADR-0003 on the `work` branch has the reasoning and what is deliberately left out.
+
+On the web, a player's secrets (value and salt behind each commitment) live only in the browser, stored under the commitment they open BEFORE the transaction is sent, so the current one is always the one the chain holds. Losing them loses the match, which is why the page offers a backup.
+
 ## Design decisions
 
 - **One proving backend.** Proofs, verification keys and the Solidity verifiers all come from `@aztec/bb.js`, in node and in the browser alike. The native `bb` CLI is not used: a CLI and a browser prover on two versions is precisely the mismatch that fails with an unreadable error at proving time.
@@ -50,6 +63,9 @@ pnpm circuits:test     # nargo test + the prover tests
 - **Verifier size.** A verifier is about 24.1 KB unoptimized (the default profile, used by tests) and 19.5 KB with the production profile, against the 24 KB (24,576 bytes) limit. It is mostly fixed code, so more circuits do not grow it much, but it is close to the limit.
 - **The proving setup (CRS) comes from Aztec's CDN.** bb.js downloads the points a circuit needs (32 bytes per gate, about 130 KB for the demo circuit) from `crs.aztec-cdn.foundation`, falling back to `crs.aztec-labs.com`, and the browser build has no option to self-host them. A deployment that must not depend on a third party has to solve this, for example by caching them in the service worker.
 - **Single-threaded proving on static hosting.** Multi-threaded proving needs cross-origin isolation (COOP/COEP headers), which static and IPFS hosting cannot set. bb.js then proves single-threaded, which is slower but works: the browser test proves exactly that way.
+
+- **Every proven action costs about 3.5 to 4 million gas** (the UltraHonk ZK verifier; a plain action is ~65k). Zero knowledge cannot be dropped, since it is what hides the state, so these games belong on an L2 or a cheap chain, and the signer's credits must be sized per proof.
+- **The prover is heavy to download.** Noir's wasm is ~3.9 MB and bb.js ships Barretenberg in two ~4 MB chunks; the inherited service worker precaches them, so a first visit downloads about 20 MB in the background. Good for playing offline, costly on a phone; decide per game.
 
 ## Inspiration
 
