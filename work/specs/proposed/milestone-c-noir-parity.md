@@ -1,7 +1,7 @@
 ---
 title: duel-in-the-dark on template-zk-game, milestone C (parity with the 2023 demo)
 type: spec
-status: proposed
+status: accepted
 created: 2026-10-31
 decides-with: template-zk-game work branch (docs/plans/zk-game-framework.md, ADR-0001, ADR-0002, ADR-0003)
 touches: branch `noir` (circuits/, contracts/, web/)
@@ -34,7 +34,7 @@ Rooms are numbered 1..8, as in the old SVG. 0 always means "no room".
 | 7 | Cargo Hold | lower | 4, 8, 5, 6 | 7, 6, 5 |
 | 8 | Engine Room | lower | 7, 6, 3 | 8, 7, 6 |
 
-Adjacency is symmetric (a test checks it). Both tables are written ONCE in Noir (`circuits/duel/src/ship.nr`, as 8-bit masks per room: bit r-1 set when room r is reachable) and once in TypeScript for the UI (`circuits/src/duel.ts`), and a TypeScript test executes the move and shoot circuits (witness only, no proving) for all 64 room pairs and checks each is accepted exactly when the TypeScript table says so, so the two cannot drift. Solidity never needs the map.
+Both tables are DIRECTED ("from this room, to these"), so nothing in the design assumes symmetry: the shoot table is not symmetric (the Gantry sees rooms that cannot see it), and the map may gain one-way paths later. The milestone C move table happens to be symmetric, and a test pins that as a fact about THIS map's data, to be dropped if the map changes. Both tables are written ONCE in Noir (`circuits/duel/src/ship.nr`, as 8-bit masks per room: bit r-1 set when room r is reachable) and once in TypeScript for the UI (`circuits/src/duel.ts`), and a TypeScript test executes the move and shoot circuits (witness only, no proving) for all 64 room pairs and checks each is accepted exactly when the TypeScript table says so, so the two cannot drift. Solidity never needs the map.
 
 ## Hidden state (private, per seat)
 
@@ -182,8 +182,8 @@ HideAndSeek's contract, deploy script, tests, its two circuits (`move_on_ring`, 
 
 About 3.5 to 4 M gas per proven action (the template's measurement), so a shot costs three proofs (shoot, answer, forced move), roughly 11 to 12 M gas, and a move one. 20 public inputs instead of 2 or 3 should add little; it is measured, not assumed.
 
-## Open choices (recommendation first)
+## Choices made (2026-10-31)
 
-1. **Forced move after the answer (3 proofs per shot)**, as the card game plays it, the shooter knows whether they hit before choosing where to go; it needs the `_turnMayEnd` hook. Alternative: fold the forced move into the shot's proof (2 proofs, about 4 M gas less), at the cost of the shooter committing to the move before the answer. The 2023 demo did neither (one proof per turn, no forced move).
-2. **Starting room unrestricted (any of 1..8), chosen by the player.** Alternative: random, or one per deck.
-3. **Keep `in_range` and `/zk`** (see above). Alternative: drop them too and list them.
+1. **The forced move is its own proof, after the answer** (3 proofs per shot), as the card game plays it: the shooter knows whether they hit before choosing where to go. Hence the `_turnMayEnd` hook. Rejected: folding it into the shot's proof (2 proofs, but the shooter commits to the escape before the answer).
+2. **The starting room is chosen by the player, any of 1..8**, as the card game does.
+3. **`in_range` and `/zk` are kept**, HideAndSeek is dropped.
