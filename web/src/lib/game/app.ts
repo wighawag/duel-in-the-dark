@@ -19,6 +19,13 @@ import {createGameState, type GameStateStore} from './state.js';
  * Accurate on purpose: stakes and withdrawals still go through the wallet, see
  * routes/hide-and-seek/lib/send.ts.
  */
+/**
+ * THE GAME'S NAME AND PAGE, for the inherited chrome that links to it (the
+ * navbar, the home page), so a descendant renames its game here and edits no
+ * shared file. The e2e suites have the same pair in web/e2e/routes.ts.
+ */
+export const GAME = {name: 'Hide and Seek', route: '/hide-and-seek/'} as const;
+
 export const SIGNER_GRANT: SignerGrant = {action: 'play your turns'};
 
 export function createAppContext(core: CoreServices): AppMembers {

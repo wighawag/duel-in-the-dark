@@ -1,5 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {test, expect, describe} from '../fixtures/test';
+import {GAME} from '../routes';
 
 /**
  * THE APP'S NAME COMES FROM THE APP, not from a literal here.
@@ -36,9 +37,9 @@ describe('Home Page', () => {
 	test('should have a link to the game', async ({page}) => {
 		await page.goto('/');
 
-		const gameButton = page.getByRole('link', {name: /play hide and seek/i});
+		const gameButton = page.getByRole('link', {name: GAME.homeLink});
 		await expect(gameButton).toBeVisible();
-		await expect(gameButton).toHaveAttribute('href', /\/hide-and-seek/);
+		await expect(gameButton).toHaveAttribute('href', new RegExp(GAME.route));
 	});
 });
 
@@ -47,20 +48,20 @@ describe('Home Page - Navigation', () => {
 		await page.goto('/');
 
 		// Wait for the page to be fully loaded
-		const demoLink = page.getByRole('link', {name: /play hide and seek/i});
+		const demoLink = page.getByRole('link', {name: GAME.homeLink});
 		await expect(demoLink).toBeVisible({timeout: 10000});
 
 		// Go to demo. A click during SvelteKit hydration can be swallowed (the
 		// router installs its handler mid-flight), so retry until the URL changes.
 		await expect(async () => {
 			await demoLink.click();
-			await page.waitForURL(/hide-and-seek/, {timeout: 3000});
+			await page.waitForURL(new RegExp(GAME.route), {timeout: 3000});
 		}).toPass({timeout: 15000});
 
 		// Verify we're on demo page by checking for the heading
-		await expect(
-			page.getByRole('heading', {name: 'Hide and Seek'}),
-		).toBeVisible({timeout: 10000});
+		await expect(page.getByRole('heading', {name: GAME.heading})).toBeVisible({
+			timeout: 10000,
+		});
 
 		// Navigate directly back to home using goto
 		await page.goto('/');

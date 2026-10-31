@@ -49,6 +49,8 @@ pnpm circuits:test     # nargo test + the prover tests
 
 A game inherits it and writes its actions. A game whose turn can owe an action that is neither paid in action points nor a query (a forced move after a shot) overrides `_turnMayEnd`, and the turn waits for it. The one rule that matters: **a proof's public inputs are built from storage and the pending query, never taken from the caller**; only the claimed result (a hit, a new commitment) comes from the player, and the proof binds it. `HideAndSeek` is the worked example, and ADR-0003 on the `work` branch has the reasoning and what is deliberately left out.
 
+A game REPLACING HideAndSeek names itself in four places and edits no other inherited file: its `$app-specific` module (the alias in `web/svelte.config.js`, exporting `GAME` for the navbar and home page), `GAME` in `web/e2e/routes.ts` for the inherited e2e suites, `web/test/lib/game-world.ts` for the unit suites that boot an embedded chain, and its own deploy script, contract, circuits and route.
+
 On the web, a player's secrets (value and salt behind each commitment) live only in the browser, stored under the commitment they open BEFORE the transaction is sent, so the current one is always the one the chain holds. Losing them loses the match, which is why the page offers a backup.
 
 ## Design decisions

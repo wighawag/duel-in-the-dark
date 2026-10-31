@@ -20,9 +20,22 @@
  * `/demo/` swaps in its own main route. Keep `/` first: it is the only entry
  * every descendant is guaranteed to share.
  */
+/**
+ * THE GAME, as the suites that play or visit it name it: its page, the heading
+ * that page renders, the label of the home page's link to it, and its contract
+ * (as /contracts lists it). The app has the same name and route in
+ * `GAME` of its `$app-specific` module; a descendant changes both.
+ */
+export const GAME = {
+	route: '/hide-and-seek/',
+	heading: 'Hide and Seek',
+	homeLink: /play hide and seek/i,
+	contract: 'HideAndSeek',
+} as const;
+
 export const SMOKE_ROUTES = [
 	'/',
-	'/hide-and-seek/',
+	GAME.route,
 	'/transactions/',
 	'/explorer/',
 ] as const;

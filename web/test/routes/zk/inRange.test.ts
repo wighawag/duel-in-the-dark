@@ -3,8 +3,7 @@ import {get} from 'svelte/store';
 import {createContext} from '$lib/context/index';
 import {createEmbeddedWorld, type EmbeddedWorld} from '$lib/embedded';
 import {config, extensions} from 'template-zk-game-contracts/rocketh/config.js';
-import deployVerifiers from 'template-zk-game-contracts/deploy/000_deploy_verifiers.js';
-import deployHideAndSeek from 'template-zk-game-contracts/deploy/002_deploy_hide_and_seek.js';
+import {GAME_SCRIPTS} from '../../lib/game-world';
 import {createInRangeDemo} from '../../../src/routes/zk/lib/inRange';
 
 // The /zk page's own logic against a real chain: an embedded world (a node
@@ -31,10 +30,7 @@ async function demoOnAChain() {
 			nativeCurrency: {name: 'Ether', symbol: 'ETH', decimals: 18},
 		},
 		rocketh: {config, extensions},
-		scripts: [
-			{id: '000_deploy_verifiers', module: deployVerifiers},
-			{id: '002_deploy_hide_and_seek', module: deployHideAndSeek},
-		],
+		scripts: GAME_SCRIPTS,
 		accounts: {deployer: DEPLOYER, admin: ADMIN},
 		initialBalances: {
 			'0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266': 10n ** 24n,

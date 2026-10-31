@@ -1,4 +1,5 @@
 import {expect, type Page} from '@playwright/test';
+import {GAME} from '../routes';
 
 /**
  * THE TRANSACTION THE INHERITED SUITES SEND, now that there is no greetings demo.
@@ -14,7 +15,7 @@ import {expect, type Page} from '@playwright/test';
  * Through /contracts, i.e. from the ACCOUNT executor, which is also the route
  * these suites assert.
  */
-export const HARMLESS_CONTRACT = 'HideAndSeek';
+export const HARMLESS_CONTRACT = GAME.contract;
 export const HARMLESS_WRITE = 'revokeDelegate';
 /** An address that is nobody's delegate. */
 export const HARMLESS_ARGUMENT = '0x000000000000000000000000000000000000dEaD';
@@ -36,7 +37,7 @@ export async function openContract(
 	const current = (await trigger.textContent()) ?? '';
 	if (!current.includes(name)) {
 		// Exact TEXT, not an anchored regex on the item: an item's text content
-		// carries more than its label, and `HideAndSeek_Proxy` must not match.
+		// carries more than its label, and the game's `<Name>_Proxy` must not match.
 		const item = page
 			.locator('[data-slot="select-item"]')
 			.getByText(name, {exact: true});
