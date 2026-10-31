@@ -8,14 +8,10 @@ import {
 } from '$lib/core/connection/polling-store';
 
 /**
- * The game's onchain state: what the app context calls `onchainState`, the one
- * member core consumes (it refreshes it when a transaction of ours lands, and
- * reads its status for the RPC-health banner).
- *
- * For the reference game that is the latest matches, plus the connected
- * player's withdrawable balance. Polled; refetched at once when the account
- * changes. A game whose state is better built from events supplies its own
- * store with the same shape instead.
+ * The game's onchain state, the app context's `onchainState`: the latest
+ * matches, each with the public duel `State` the circuits see (`getState`),
+ * plus the connected player's withdrawable balance. Polled; refetched at once
+ * when the account changes.
  */
 
 export const STATUS = [
@@ -30,6 +26,18 @@ export type MatchStatus = (typeof STATUS)[number];
 /** How many of the latest matches are read. */
 const RECENT = 20;
 
+/** The public duel state, as the circuits and `Duel.getState` have it. */
+export type BoardState = {
+	commitments: readonly [`0x${string}`, `0x${string}`];
+	hits: readonly [number, number];
+	actor: number;
+	ap: number;
+	phase: number;
+	argA: number;
+	argB: number;
+	sealedRoom: number;
+};
+
 export type MatchSummary = {
 	id: bigint;
 	status: MatchStatus;
@@ -40,7 +48,7 @@ export type MatchSummary = {
 	deadline: number;
 	stake: bigint;
 	seats: readonly {player: `0x${string}`; commitment: `0x${string}`}[];
-	pendingGuess: number;
+	board: BoardState;
 };
 
 export type GameView = {
@@ -49,16 +57,16 @@ export type GameView = {
 	matches: MatchSummary[];
 };
 
-export type GameStateStore = PollingStore<GameView>;
+export type DuelStateStore = PollingStore<GameView>;
 
-export function createGameState(params: {
+export function createDuelState(params: {
 	publicClient: PublicClient;
 	deployments: Readable<TypedDeployments> & {get(): TypedDeployments};
 	account: Readable<Account>;
 	/** When present, nothing is read while it is false (no RPC of our own yet). */
 	fetchGate?: Readable<boolean>;
 	fetchInterval?: number;
-}): GameStateStore {
+}): DuelStateStore {
 	const {publicClient, deployments} = params;
 	const source = derived(
 		[params.fetchGate ?? readable(true), params.account],
@@ -67,7 +75,7 @@ export function createGameState(params: {
 
 	return createPollingStore<GameView, {account: Account} | undefined>(
 		async (current) => {
-			const c = deployments.get().contracts.HideAndSeek;
+			const c = deployments.get().contracts.Duel;
 			const player = current?.account;
 			const last = await publicClient.readContract({
 				...c,
@@ -77,7 +85,7 @@ export function createGameState(params: {
 			for (let id = last; id > 0n && ids.length < RECENT; id--) ids.push(id);
 			const matches = await Promise.all(
 				ids.map(async (id) => {
-					const [m, pendingGuess] = await Promise.all([
+					const [m, s] = await Promise.all([
 						publicClient.readContract({
 							...c,
 							functionName: 'getMatch',
@@ -85,7 +93,7 @@ export function createGameState(params: {
 						}),
 						publicClient.readContract({
 							...c,
-							functionName: 'pendingGuess',
+							functionName: 'getState',
 							args: [id],
 						}),
 					]);
@@ -99,7 +107,11 @@ export function createGameState(params: {
 						deadline: Number(m.state.deadline),
 						stake: m.state.stake,
 						seats: m.seats,
-						pendingGuess,
+						board: {
+							...s,
+							commitments: [s.commitments[0], s.commitments[1]],
+							hits: [s.hits[0], s.hits[1]],
+						},
 					} satisfies MatchSummary;
 				}),
 			);

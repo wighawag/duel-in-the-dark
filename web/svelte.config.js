@@ -76,7 +76,7 @@ const config = {
 			//
 			// Not `$app`, which is SvelteKit's. An alias matches only itself or itself
 			// plus `/`, so `$app-specific` and `$app/navigation` never capture each other.
-			'$app-specific': 'src/lib/game/app.ts',
+			'$app-specific': 'src/lib/duel/app.ts',
 		},
 		output: {
 			bundleStrategy: 'split', // code-split per route so the initial

@@ -1,25 +1,29 @@
-import type {HideAndSeekSecret} from 'duel-in-the-dark-circuits/hide-and-seek';
+import type {DuelSecret} from 'duel-in-the-dark-circuits/duel';
 import {
 	createSecretStore as createStore,
 	type SecretStore as Store,
 } from '$lib/zk-game/secrets';
 
 /** This game's secrets, in the shared store (see $lib/zk-game/secrets). */
-export type SecretStore = Store<HideAndSeekSecret>;
+export type SecretStore = Store<DuelSecret>;
 
 export function createSecretStore(
 	scope: {chainId: number; contract: string; player: string},
 	storage?: Pick<Storage, 'getItem' | 'setItem'>,
 ): SecretStore {
-	return createStore({namespace: 'hide-and-seek', scope, isSecret}, storage);
+	return createStore({namespace: 'duel', scope, isSecret}, storage);
 }
 
-function isSecret(value: unknown): value is HideAndSeekSecret {
-	const v = value as HideAndSeekSecret;
+export function isSecret(value: unknown): value is DuelSecret {
+	const v = value as DuelSecret;
 	return (
 		typeof v === 'object' &&
 		v !== null &&
-		typeof v.cell === 'number' &&
+		typeof v.room === 'number' &&
+		Array.isArray(v.traps) &&
+		v.traps.length === 2 &&
+		v.traps.every((t) => typeof t === 'number') &&
+		typeof v.charge === 'number' &&
 		typeof v.salt === 'string' &&
 		typeof v.commitment === 'string'
 	);

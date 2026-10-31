@@ -1,5 +1,5 @@
 import deployVerifiers from 'duel-in-the-dark-contracts/deploy/000_deploy_verifiers.js';
-import deployHideAndSeek from 'duel-in-the-dark-contracts/deploy/002_deploy_hide_and_seek.js';
+import deployDuel from 'duel-in-the-dark-contracts/deploy/002_deploy_duel.js';
 
 /**
  * What an embedded world must deploy for the app's context to work: the
@@ -9,8 +9,8 @@ import deployHideAndSeek from 'duel-in-the-dark-contracts/deploy/002_deploy_hide
  */
 export const GAME_SCRIPTS = [
 	{id: '000_deploy_verifiers', module: deployVerifiers},
-	{id: '002_deploy_hide_and_seek', module: deployHideAndSeek},
+	{id: '002_deploy_duel', module: deployDuel},
 ];
 
 /** The game's deployment name. */
-export const GAME_CONTRACT = 'HideAndSeek' as const;
+export const GAME_CONTRACT = 'Duel' as const;

@@ -27,10 +27,10 @@
  * `GAME` of its `$app-specific` module; a descendant changes both.
  */
 export const GAME = {
-	route: '/hide-and-seek/',
-	heading: 'Hide and Seek',
-	homeLink: /play hide and seek/i,
-	contract: 'HideAndSeek',
+	route: '/duel/',
+	heading: 'Duel in the Dark',
+	homeLink: /play duel in the dark/i,
+	contract: 'Duel',
 } as const;
 
 export const SMOKE_ROUTES = [

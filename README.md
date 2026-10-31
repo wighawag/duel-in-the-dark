@@ -1,4 +1,4 @@
-> **template-zk-game**: this template adds Noir zero-knowledge circuits for hidden-information games on top of jolly-roger. Start with [README.zk-game.md](./README.zk-game.md); everything below is inherited and still applies.
+> **duel-in-the-dark**: a hidden-information duel on a dark ship, built on template-zk-game. Start with [README.duel.md](./README.duel.md), then [README.zk-game.md](./README.zk-game.md) for the template; everything below is inherited and still applies.
 
 # Full-Stack Onchain App Template
 

@@ -57,48 +57,35 @@
 # seventeen paths, and a cascade had already paid for it.
 
 # ---------------------------------------------------------------------------
-# WHAT template-zk-game DROPS FROM ITS STEM (jolly-roger, branch `integration`).
+# WHAT duel-in-the-dark DROPS FROM ITS STEM (template-zk-game, branch `main`).
 #
-# One decision, many files: THIS TEMPLATE IS A GAME, NOT THE GREETINGS DEMO. The
-# same decision template-commit-reveal took, for the same reasons, and the same
-# shape of list. The concrete trigger here: an authorisation of this browser's
-# signer is only good at the ONE contract the app registers it with
-# (`delegationRegistry`), and every action of a game must reach the GAME
-# contract, so the demo's contract cannot also be the registry. Measured, not
-# assumed: a two-player match in a real browser failed with the signer refused
-# by HideAndSeek, and passed once the registry was the game.
+# template-zk-game's reference game, HideAndSeek, replaced by the duel
+# everywhere it lived. Its plumbing demo (`in_range`, `/zk`) is KEPT: it tests
+# the template's pipeline rather than a game, and dropping it would only turn
+# every later template change to it into a conflict.
 
-# THE DEMO'S CONTRACT, and everything that deploys, scripts or tests it. The
-# game's verifiers and HideAndSeek replace it; the suites that only needed "some
-# transaction" now send a harmless one through /contracts (see
-# web/e2e/fixtures/contracts-page.ts).
-contracts/src/GreetingsRegistry
-contracts/deploy/001_deploy_greetings_registry.ts
-contracts/scripts/setMessage.ts
-contracts/test/js/GreetingsRegistry.test.ts
-contracts/test/solidity/GreetingsRegistry
+# ITS CIRCUITS and their generated artifacts and verifiers. The duel's circuits
+# (circuits/duel*) replace them; circuits/src/duel.ts replaces the client.
+circuits/answer_guess
+circuits/move_on_ring
+circuits/generated/answer_guess.json
+circuits/generated/move_on_ring.json
+circuits/src/hide-and-seek.ts
+contracts/src/verifiers/AnswerGuessVerifier.sol
+contracts/src/verifiers/MoveOnRingVerifier.sol
 
-# THE DEMO'S ROUTES. `/hide-and-seek` is the game, `/zk` the prover demo.
-# `/offline-demo` embedded `/demo` on an in-tab chain; a 2-player match against
-# nobody is not a game, so it went with it, and `$lib/offline.ts` (which only it
-# used) with it. The in-tab chain itself (`$lib/embedded`) stays: the tests use it.
-web/src/routes/demo
-web/src/routes/offline-demo
-web/src/lib/offline.ts
+# ITS CONTRACT, deploy script and tests. contracts/src/Duel, 002_deploy_duel.ts
+# and Duel.test.ts replace them; ZKMatches itself is still tested through Duel.
+contracts/src/HideAndSeek
+contracts/deploy/002_deploy_hide_and_seek.ts
+contracts/test/js/HideAndSeek.test.ts
 
-# THE HALF OF THE CONTEXT A FORK IS MEANT TO REPLACE, and its two demo-only
-# modules. `$app-specific` points at `web/src/lib/game/app.ts` instead (see
-# svelte.config.js); `$lib/game/state.ts` is this app's onchain state.
-web/src/lib/context/app.ts
-web/src/lib/onchain/state.ts
-web/src/lib/view/index.ts
+# ITS HALF OF THE APP CONTEXT. `$app-specific` points at web/src/lib/duel/app.ts
+# instead (svelte.config.js), with the duel's onchain state beside it.
+web/src/lib/game
 
-# THE DEMO'S OWN SUITES, which reached their subjects through the greetings page.
-# Delegation is still asserted, on chain (contracts/test/js/HideAndSeek.test.ts)
-# and in a browser by web/e2e/tests/hide-and-seek.e2e.ts, which cannot play a
-# turn unless the signer is a registered delegate.
-web/e2e/tests/demo.e2e.ts
-web/e2e/tests/delegation.e2e.ts
-web/test/routes/demo
-web/test/lib/onchain/state.test.ts
-web/test/lib/view/pending-operations.test.ts
+# ITS PAGE AND SUITES. `/duel` is the game; test/routes/duel and
+# e2e/tests/duel.e2e.ts test it the same way.
+web/src/routes/hide-and-seek
+web/test/routes/hide-and-seek
+web/e2e/tests/hide-and-seek.e2e.ts

@@ -1,12 +1,10 @@
-import {get, writable, type Readable} from 'svelte/store';
+import {writable, type Readable} from 'svelte/store';
 import type {Context} from '$lib/context/types';
-import type {GameStateStore, MatchSummary} from '$lib/game/state';
+import type {DuelStateStore, MatchSummary} from '$lib/duel/state';
 import {getZK, getCircuits} from '$lib/zk';
-import type {
-	HideAndSeek,
-	HideAndSeekSecret,
-} from 'duel-in-the-dark-circuits/hide-and-seek';
+import type {Duel, DuelSecret, DuelState} from 'duel-in-the-dark-circuits/duel';
 import {createSecretStore, type SecretStore} from './secrets';
+import {seatOf} from './view';
 import {
 	currentPlayer,
 	sendAsSigner as sendAsSignerTo,
@@ -17,16 +15,17 @@ import {
 } from '$lib/zk-game/send';
 
 /**
- * The reference game's client: what the /hide-and-seek page shows and does.
+ * duel-in-the-dark's client: what the /duel page shows and does.
  *
- * Reads are the app context's `onchainState` (see $lib/game). Every action is a
- * method that proves what it has to (in the browser), stores any new secret
- * BEFORE sending (see secrets.ts), sends through the right executor (see
- * send.ts) and refreshes. The page renders this and wires buttons to it.
+ * Reads are the app context's `onchainState` (see $lib/duel). Every action
+ * proves what it has to (in the browser) against the state the chain holds
+ * RIGHT NOW (read fresh, not from the polled view, so a proof is never made
+ * for a state that already moved on), stores any new secret BEFORE sending
+ * (see $lib/zk-game/secrets), sends through the right executor (see
+ * $lib/zk-game/send) and refreshes. The page renders this and wires clicks.
  */
 
-export {STATUS} from '$lib/game/state';
-export type {MatchStatus, MatchSummary, GameView} from '$lib/game/state';
+export type {MatchStatus, MatchSummary, GameView} from '$lib/duel/state';
 
 export type Activity =
 	| {step: 'idle'}
@@ -34,18 +33,17 @@ export type Activity =
 	| {step: 'done'; action: string; result: SendResult}
 	| {step: 'failed'; action: string; message: string};
 
-export type HideAndSeekGame = {
+export type DuelGame = {
 	/** the app context's onchainState: the game's matches, polled */
-	view: GameStateStore;
+	view: DuelStateStore;
 	activity: Readable<Activity>;
-	/** The seat `player` holds in `match`, if any. */
-	seatOf(match: MatchSummary, player: string | undefined): number | undefined;
-	/** The player's own hidden cell in `match`, read from this browser's secrets. */
-	myCell(match: MatchSummary, player: string | undefined): number | undefined;
-	create(cell: number, stake: bigint): Promise<void>;
-	join(match: MatchSummary, cell: number): Promise<void>;
-	move(match: MatchSummary, direction: 1 | -1): Promise<void>;
-	guess(match: MatchSummary, cell: number): Promise<void>;
+	/** The player's own hidden room in `match`, read from this browser's secrets. */
+	myRoom(match: MatchSummary, player: string | undefined): number | undefined;
+	create(room: number, stake: bigint): Promise<void>;
+	join(match: MatchSummary, room: number): Promise<void>;
+	/** a move during play, or the free move after a shot */
+	move(match: MatchSummary, to: number): Promise<void>;
+	shoot(match: MatchSummary, target: number): Promise<void>;
 	answer(match: MatchSummary): Promise<void>;
 	endTurn(match: MatchSummary): Promise<void>;
 	claimTimeout(match: MatchSummary): Promise<void>;
@@ -55,41 +53,35 @@ export type HideAndSeekGame = {
 	importSecrets(json: string): Promise<number>;
 };
 
-export function createHideAndSeekGame(
+export function createDuelGame(
 	context: SendDeps &
 		Pick<Context, 'publicClient' | 'deployments' | 'onchainState'>,
 	options: {
 		/** where secrets are kept; the browser's localStorage unless a test says otherwise */
 		storage?: Pick<Storage, 'getItem' | 'setItem'>;
 	} = {},
-): HideAndSeekGame {
-	const contract = () => context.deployments.get().contracts.HideAndSeek;
+): DuelGame {
+	const contract = () => context.deployments.get().contracts.Duel;
 	type GameAbi = ReturnType<typeof contract>['abi'];
-	// Bound to the game's ABI, so every call below is checked against it.
 	const sendFromAccount = (
-		deps: SendDeps,
 		build: (player: `0x${string}`) => WriteRequest<GameAbi>,
-	) => sendFromAccountTo<GameAbi>(deps, build);
+	) => sendFromAccountTo<GameAbi>(context, build);
 	const sendAsSigner = (
-		deps: SendDeps,
 		action: string,
 		build: (player: `0x${string}`) => WriteRequest<GameAbi>,
-	) => sendAsSignerTo<GameAbi>(deps, action, build);
+	) => sendAsSignerTo<GameAbi>(context, action, build);
 
 	const view = context.onchainState;
-
 	const activity = writable<Activity>({step: 'idle'});
 
-	let game: Promise<HideAndSeek> | undefined;
-	function prover(): Promise<HideAndSeek> {
-		game ??= Promise.all([
+	let duel: Promise<Duel> | undefined;
+	function prover(): Promise<Duel> {
+		duel ??= Promise.all([
 			getZK(),
 			getCircuits(),
-			import('duel-in-the-dark-circuits/hide-and-seek'),
-		]).then(([zk, circuits, {createHideAndSeek}]) =>
-			createHideAndSeek(zk, circuits),
-		);
-		return game;
+			import('duel-in-the-dark-circuits/duel'),
+		]).then(([zk, circuits, {createDuel}]) => createDuel(zk, circuits));
+		return duel;
 	}
 
 	function secretsFor(player: string): SecretStore {
@@ -100,22 +92,43 @@ export function createHideAndSeekGame(
 		);
 	}
 
-	function seatOf(match: MatchSummary, player: string | undefined) {
-		if (!player) return undefined;
-		const i = match.seats.findIndex(
-			(s) => s.player.toLowerCase() === player.toLowerCase(),
-		);
-		return i < 0 ? undefined : i;
-	}
-
 	function mySecret(
 		match: MatchSummary,
 		player: string,
-	): HideAndSeekSecret | undefined {
+	): DuelSecret | undefined {
 		const seat = seatOf(match, player);
 		return seat === undefined
 			? undefined
 			: secretsFor(player).get(match.seats[seat].commitment);
+	}
+
+	async function freshState(match: MatchSummary): Promise<DuelState> {
+		const s = await context.publicClient.readContract({
+			...contract(),
+			functionName: 'getState',
+			args: [match.id],
+		});
+		return {
+			...s,
+			commitments: [s.commitments[0], s.commitments[1]],
+			hits: [s.hits[0], s.hits[1]],
+		};
+	}
+
+	function requireSecret(state: DuelState, seat: number, player: string) {
+		const secret = secretsFor(player).get(state.commitments[seat]);
+		if (!secret) {
+			throw new Error(
+				'This browser does not hold the secret for this match. Import your backup to keep playing.',
+			);
+		}
+		return secret;
+	}
+
+	function requireSeat(match: MatchSummary, player: string) {
+		const seat = seatOf(match, player);
+		if (seat === undefined) throw new Error('You are not in this match.');
+		return seat;
 	}
 
 	/** Run one action: prove (optional), send, report, refresh. */
@@ -144,30 +157,19 @@ export function createHideAndSeekGame(
 
 	const sending = (action: string) => activity.set({step: 'sending', action});
 
-	function requireSecret(match: MatchSummary, player: string) {
-		const secret = mySecret(match, player);
-		if (!secret) {
-			throw new Error(
-				'This browser does not hold the secret for this match. Import your backup to keep playing.',
-			);
-		}
-		return secret;
-	}
-
 	return {
 		view,
 		activity,
-		seatOf,
-		myCell(match, player) {
-			return player ? mySecret(match, player)?.cell : undefined;
+		myRoom(match, player) {
+			return player ? mySecret(match, player)?.room : undefined;
 		},
 
-		create(cell, stake) {
+		create(room, stake) {
 			return run('Create a match', async (player) => {
-				const {secret, proof} = await (await prover()).hide(cell);
+				const {secret, proof} = await (await prover()).start(room);
 				secretsFor(player).put(secret);
 				sending('Create a match');
-				return sendFromAccount(context, (p) => ({
+				return sendFromAccount((p) => ({
 					...contract(),
 					functionName: 'createMatch',
 					args: [p, secret.commitment, proof.proof],
@@ -176,12 +178,12 @@ export function createHideAndSeekGame(
 			});
 		},
 
-		join(match, cell) {
+		join(match, room) {
 			return run('Join the match', async (player) => {
-				const {secret, proof} = await (await prover()).hide(cell);
+				const {secret, proof} = await (await prover()).start(room);
 				secretsFor(player).put(secret);
 				sending('Join the match');
-				return sendFromAccount(context, (p) => ({
+				return sendFromAccount((p) => ({
 					...contract(),
 					functionName: 'joinMatch',
 					args: [match.id, p, secret.commitment, proof.proof],
@@ -190,42 +192,51 @@ export function createHideAndSeekGame(
 			});
 		},
 
-		move(match, direction) {
+		move(match, to) {
 			return run('Move', async (player) => {
-				const {secret, proof} = await (
+				const state = await freshState(match);
+				const seat = requireSeat(match, player);
+				const t = await (
 					await prover()
-				).move(requireSecret(match, player), direction);
-				secretsFor(player).put(secret);
+				).move(state, requireSecret(state, seat, player), to);
+				secretsFor(player).put(t.secret);
 				sending('Move');
-				return sendAsSigner(context, 'Move', (p) => ({
+				return sendAsSigner('Move', (p) => ({
 					...contract(),
 					functionName: 'move',
-					args: [match.id, p, secret.commitment, proof.proof],
+					args: [match.id, p, t.next, t.proof.proof],
 				}));
 			});
 		},
 
-		guess(match, cell) {
-			return run('Guess', async () => {
-				sending('Guess');
-				return sendAsSigner(context, 'Guess', (p) => ({
+		shoot(match, target) {
+			return run('Shoot', async (player) => {
+				const state = await freshState(match);
+				const seat = requireSeat(match, player);
+				const t = await (
+					await prover()
+				).shoot(state, requireSecret(state, seat, player), target);
+				sending('Shoot');
+				return sendAsSigner('Shoot', (p) => ({
 					...contract(),
-					functionName: 'guess',
-					args: [match.id, p, cell],
+					functionName: 'shoot',
+					args: [match.id, p, t.next, t.proof.proof],
 				}));
 			});
 		},
 
 		answer(match) {
-			return run('Answer the guess', async (player) => {
-				const {hit, proof} = await (
+			return run('Answer the shot', async (player) => {
+				const state = await freshState(match);
+				const seat = requireSeat(match, player);
+				const t = await (
 					await prover()
-				).answer(requireSecret(match, player), match.pendingGuess);
-				sending('Answer the guess');
-				return sendAsSigner(context, 'Answer the guess', (p) => ({
+				).answerShot(state, requireSecret(state, seat, player));
+				sending('Answer the shot');
+				return sendAsSigner('Answer the shot', (p) => ({
 					...contract(),
-					functionName: 'answerGuess',
-					args: [match.id, p, hit, proof.proof],
+					functionName: 'answerShot',
+					args: [match.id, p, t.next, t.proof.proof],
 				}));
 			});
 		},
@@ -233,7 +244,7 @@ export function createHideAndSeekGame(
 		endTurn(match) {
 			return run('End the turn', async () => {
 				sending('End the turn');
-				return sendAsSigner(context, 'End the turn', (p) => ({
+				return sendAsSigner('End the turn', (p) => ({
 					...contract(),
 					functionName: 'endTurn',
 					args: [match.id, p],
@@ -244,7 +255,7 @@ export function createHideAndSeekGame(
 		claimTimeout(match) {
 			return run('Claim the timeout', async () => {
 				sending('Claim the timeout');
-				return sendAsSigner(context, 'Claim the timeout', () => ({
+				return sendAsSigner('Claim the timeout', () => ({
 					...contract(),
 					functionName: 'claimTimeout',
 					args: [match.id],
@@ -255,7 +266,7 @@ export function createHideAndSeekGame(
 		cancel(match) {
 			return run('Cancel the match', async () => {
 				sending('Cancel the match');
-				return sendFromAccount(context, (p) => ({
+				return sendFromAccount((p) => ({
 					...contract(),
 					functionName: 'cancelMatch',
 					args: [match.id, p],
@@ -266,7 +277,7 @@ export function createHideAndSeekGame(
 		withdraw() {
 			return run('Withdraw', async () => {
 				sending('Withdraw');
-				return sendFromAccount(context, () => ({
+				return sendFromAccount(() => ({
 					...contract(),
 					functionName: 'withdraw',
 				}));
