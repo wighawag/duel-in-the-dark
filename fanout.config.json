@@ -1,0 +1,9 @@
+{
+  "stem": "github:wighawag/template-zk-game",
+  "branches": {
+    "noir": {
+      "stemBranch": "main"
+    }
+  },
+  "verify": "pnpm install && pnpm --filter ./web check && pnpm --filter ./web run test:unit && pnpm --filter ./circuits test && pnpm --filter ./contracts test"
+}
