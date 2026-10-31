@@ -69,6 +69,13 @@ abstract contract ZKMatches is UsingDelegation {
         uint8 awaiting;
         /// @notice the winning seat, when Finished
         uint8 winner;
+        /// @notice the number of the current turn: 0 until the match starts,
+        ///         then 1, 2, 3... A game reads it to state anything tied to
+        ///         turn boundaries (an effect lasting until a player's next
+        ///         turn, something owed at the start of a turn, once per turn)
+        ///         as a function of public state, since a turn starts with no
+        ///         proof and nothing of the game runs at that moment.
+        uint24 turn;
         /// @notice when whoever is being waited for must have acted
         uint64 deadline;
         /// @notice what each seat put at stake; the winner takes all
@@ -102,6 +109,7 @@ abstract contract ZKMatches is UsingDelegation {
     event MatchCancelled(uint256 indexed matchId);
     event TurnStarted(
         uint256 indexed matchId,
+        uint24 turn,
         uint8 seat,
         uint8 actionPoints,
         uint64 deadline
@@ -479,10 +487,11 @@ abstract contract ZKMatches is UsingDelegation {
 
     function _startTurn(uint256 matchId, uint8 seat) private {
         Match storage m = _matches[matchId];
+        m.turn += 1;
         m.turnSeat = seat;
         m.actionPoints = _actionPointsAtTurnStart(matchId, seat);
         m.deadline = uint64(block.timestamp) + turnDuration;
-        emit TurnStarted(matchId, seat, m.actionPoints, m.deadline);
+        emit TurnStarted(matchId, m.turn, seat, m.actionPoints, m.deadline);
     }
 
     function _otherSeat(uint8 seat) internal pure returns (uint8) {
