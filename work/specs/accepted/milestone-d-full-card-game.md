@@ -10,6 +10,8 @@ touches: branch `milestone-d` (circuits/, contracts/, web/), and template-zk-gam
 
 # Spec: the full card game, every action a whole-state transition
 
+Built on branch `milestone-d` (2026-10-31): circuits, contract, web and every test layer as specified below, with these differences. The four turn fields are `Field`s in Noir (integers made the circuits 8 times bigger, see work/notes/findings/gas-per-duel-action.md); they are `uint32` in Solidity and numbers in TypeScript. The `Acted` event carries the public scalars (`last`, `phase`, `arg_a`, `arg_b`, `hits`) rather than the whole `State`, and the contract builds the public inputs as `abi.encode(state, next)`, both to stay under the contract size limit (23,564 of 24,576 bytes unoptimised).
+
 ## Scope
 
 Listen; traps (set, detonate, at most two); the six room effects; the Engine Room seal and its expiry; start-of-turn obligations. All played on chain through ZKMatches; every action a Noir circuit proving `state -> next` with every field of `next` asserted.
