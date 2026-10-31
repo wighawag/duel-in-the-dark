@@ -1,0 +1,8 @@
+[package]
+name = "duel_answer"
+type = "bin"
+authors = [""]
+
+[dependencies]
+commitment = { path = "../commitment" }
+duel = { path = "../duel" }
