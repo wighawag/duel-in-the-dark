@@ -34,7 +34,7 @@ Rooms are numbered 1..8, as in the old SVG. 0 always means "no room".
 | 7 | Cargo Hold | lower | 4, 8, 5, 6 | 7, 6, 5 |
 | 8 | Engine Room | lower | 7, 6, 3 | 8, 7, 6 |
 
-Adjacency is symmetric (a test checks it). Both tables are written ONCE in Noir (`circuits/duel/src/ship.nr`, as 8-bit masks per room: bit r-1 set when room r is reachable) and once in TypeScript for the UI (`circuits/src/duel.ts`), and a TypeScript test reads the Noir masks back through a circuit execution, so the two cannot drift. Solidity never needs the map.
+Adjacency is symmetric (a test checks it). Both tables are written ONCE in Noir (`circuits/duel/src/ship.nr`, as 8-bit masks per room: bit r-1 set when room r is reachable) and once in TypeScript for the UI (`circuits/src/duel.ts`), and a TypeScript test executes the move and shoot circuits (witness only, no proving) for all 64 room pairs and checks each is accepted exactly when the TypeScript table says so, so the two cannot drift. Solidity never needs the map.
 
 ## Hidden state (private, per seat)
 
