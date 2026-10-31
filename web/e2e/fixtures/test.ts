@@ -6,6 +6,7 @@ import {
 	type BrowserContext,
 } from '@playwright/test';
 import {parseImpersonateAddresses} from '../../src/lib/dev-accounts';
+import {GAME} from '../routes';
 
 /**
  * Extended test fixtures for E2E testing with wallet interactions.
@@ -1128,13 +1129,13 @@ export const test = base.extend<WalletFixtures & WalletOptions>({
 		await fundWallets();
 
 		// Navigate to demo page
-		await page.goto('/hide-and-seek/');
+		await page.goto(GAME.route);
 
 		// Wait for app to initialize
 		// The game page is up once its heading renders.
-		await expect(
-			page.getByRole('heading', {name: 'Hide and Seek'}),
-		).toBeVisible({timeout: 30000});
+		await expect(page.getByRole('heading', {name: GAME.heading})).toBeVisible({
+			timeout: 30000,
+		});
 
 		// Ask the app whether it is connected, rather than inferring it from the
 		// navbar balance: the balance span is empty while loading and hidden below
