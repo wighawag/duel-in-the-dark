@@ -1,5 +1,5 @@
 {
-  description = "template-zk-game: the Noir toolchain for circuits, pinned so that nargo and the JS prover agree";
+  description = "duel-in-the-dark: the Noir toolchain for circuits, pinned so that nargo and the JS prover agree";
 
   # WHY A FLAKE. nargo, @noir-lang/noir_js and @aztec/bb.js must agree on the
   # circuit artifact format, and a mismatch fails with cryptic errors at proving

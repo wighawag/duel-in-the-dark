@@ -1,5 +1,5 @@
 {
-	"name": "template-zk-game-contracts",
+	"name": "duel-in-the-dark-contracts",
 	"version": "0.0.0",
 	"license": "AGPL-3.0-only",
 	"type": "module",
@@ -18,7 +18,7 @@
 	],
 	"dependencies": {
 		"@etherplay/delegation": "^0.1.1",
-		"template-zk-game-circuits": "workspace:*"
+		"duel-in-the-dark-circuits": "workspace:*"
 	},
 	"devDependencies": {
 		"@nomicfoundation/hardhat-keystore": "^3.0.13",

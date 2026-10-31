@@ -5,7 +5,7 @@ import {getZK, getCircuits} from '$lib/zk';
 import type {
 	HideAndSeek,
 	HideAndSeekSecret,
-} from 'template-zk-game-circuits/hide-and-seek';
+} from 'duel-in-the-dark-circuits/hide-and-seek';
 import {createSecretStore, type SecretStore} from './secrets';
 import {
 	currentPlayer,
@@ -85,7 +85,7 @@ export function createHideAndSeekGame(
 		game ??= Promise.all([
 			getZK(),
 			getCircuits(),
-			import('template-zk-game-circuits/hide-and-seek'),
+			import('duel-in-the-dark-circuits/hide-and-seek'),
 		]).then(([zk, circuits, {createHideAndSeek}]) =>
 			createHideAndSeek(zk, circuits),
 		);

@@ -1,7 +1,7 @@
 /**
  * Field helpers with no dependency on the prover, so an app can draw salts and
  * check inputs without loading megabytes of wasm. Exported on their own as
- * `template-zk-game-circuits/field`, and re-exported from the main entry.
+ * `duel-in-the-dark-circuits/field`, and re-exported from the main entry.
  */
 
 /** BN254 scalar field modulus: every circuit input lives below it. */

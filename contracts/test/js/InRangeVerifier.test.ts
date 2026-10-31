@@ -1,8 +1,8 @@
 import {expect} from 'earl';
 import {describe, it, before, after} from 'node:test';
 import {network} from 'hardhat';
-import {createZK, randomField, type ZK} from 'template-zk-game-circuits';
-import {circuits} from 'template-zk-game-circuits/circuits';
+import {createZK, randomField, type ZK} from 'duel-in-the-dark-circuits';
+import {circuits} from 'duel-in-the-dark-circuits/circuits';
 import {setupFixtures} from './utils/index.js';
 
 // The end-to-end guarantee of the circuits pipeline: a proof made by the same

@@ -1,5 +1,5 @@
 {
-	"name": "template-zk-game-web",
+	"name": "duel-in-the-dark-web",
 	"private": true,
 	"version": "0.0.1",
 	"license": "AGPL-3.0-only",
@@ -29,8 +29,8 @@
 		"eip-1193": "^0.7.4",
 		"faucet-client": "^0.1.0",
 		"ipfs-gateway-emulator": "^5.1.0",
-		"template-zk-game-circuits": "workspace:*",
-		"template-zk-game-contracts": "workspace:*",
+		"duel-in-the-dark-circuits": "workspace:*",
+		"duel-in-the-dark-contracts": "workspace:*",
 		"json-stable-stringify": "^1.3.0",
 		"ldenv": "^0.6.0",
 		"mode-watcher": "^1.1.0",

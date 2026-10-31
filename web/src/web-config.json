@@ -1,9 +1,9 @@
 {
-	"name": "Jolly Roger",
-	"title": "Jolly Roger",
-	"description": "Build and Deploy for Eternity",
+	"name": "Duel in the Dark",
+	"title": "Duel in the Dark",
+	"description": "Alien versus humans on a ship, in the dark: hidden moves proven in zero knowledge",
 	"canonicalURL": "http://localhost:8080",
-	"repoURL": "",
+	"repoURL": "https://github.com/wighawag/duel-in-the-dark",
 	"communityURL": "",
 	"ENSName": null,
 	"themeColor": "#000000",

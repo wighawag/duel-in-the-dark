@@ -1,4 +1,4 @@
-import type {HideAndSeekSecret} from 'template-zk-game-circuits/hide-and-seek';
+import type {HideAndSeekSecret} from 'duel-in-the-dark-circuits/hide-and-seek';
 
 /**
  * Where a player's hidden state lives: this browser, and nowhere else.

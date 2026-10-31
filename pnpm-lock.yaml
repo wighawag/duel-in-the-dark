@@ -57,7 +57,7 @@ importers:
       '@etherplay/delegation':
         specifier: ^0.1.1
         version: 0.1.2
-      template-zk-game-circuits:
+      duel-in-the-dark-circuits:
         specifier: workspace:*
         version: link:../circuits
     devDependencies:
@@ -298,10 +298,10 @@ importers:
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
-      template-zk-game-circuits:
+      duel-in-the-dark-circuits:
         specifier: workspace:*
         version: link:../circuits
-      template-zk-game-contracts:
+      duel-in-the-dark-contracts:
         specifier: workspace:*
         version: link:../contracts
       tw-animate-css:

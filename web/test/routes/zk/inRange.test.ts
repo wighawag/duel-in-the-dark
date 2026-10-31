@@ -2,9 +2,9 @@ import {describe, it, expect, afterAll} from 'vitest';
 import {get} from 'svelte/store';
 import {createContext} from '$lib/context/index';
 import {createEmbeddedWorld, type EmbeddedWorld} from '$lib/embedded';
-import {config, extensions} from 'template-zk-game-contracts/rocketh/config.js';
-import deployVerifiers from 'template-zk-game-contracts/deploy/000_deploy_verifiers.js';
-import deployHideAndSeek from 'template-zk-game-contracts/deploy/002_deploy_hide_and_seek.js';
+import {config, extensions} from 'duel-in-the-dark-contracts/rocketh/config.js';
+import deployVerifiers from 'duel-in-the-dark-contracts/deploy/000_deploy_verifiers.js';
+import deployHideAndSeek from 'duel-in-the-dark-contracts/deploy/002_deploy_hide_and_seek.js';
 import {createInRangeDemo} from '../../../src/routes/zk/lib/inRange';
 
 // The /zk page's own logic against a real chain: an embedded world (a node

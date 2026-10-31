@@ -13,13 +13,13 @@
  * proves single-threaded: slower, but correct. See the template's notes on
  * proving performance before relying on threads.
  */
-import type {ZK} from 'template-zk-game-circuits';
+import type {ZK} from 'duel-in-the-dark-circuits';
 
 let zk: Promise<ZK> | undefined;
 
 export function getZK(): Promise<ZK> {
 	if (!zk) {
-		zk = import('template-zk-game-circuits')
+		zk = import('duel-in-the-dark-circuits')
 			.then(({createZK}) => createZK())
 			.catch((error: unknown) => {
 				// Let the next caller retry rather than caching a failed load forever.
@@ -31,8 +31,8 @@ export function getZK(): Promise<ZK> {
 }
 
 export async function getCircuits() {
-	return (await import('template-zk-game-circuits/circuits')).circuits;
+	return (await import('duel-in-the-dark-circuits/circuits')).circuits;
 }
 
-export {randomField, FIELD_MODULUS} from 'template-zk-game-circuits/field';
-export type {Proof, Hex} from 'template-zk-game-circuits';
+export {randomField, FIELD_MODULUS} from 'duel-in-the-dark-circuits/field';
+export type {Proof, Hex} from 'duel-in-the-dark-circuits';

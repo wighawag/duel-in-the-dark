@@ -1,5 +1,5 @@
 import {deployScript, artifacts} from '../rocketh/deploy.js';
-import {circuits} from 'template-zk-game-circuits/circuits';
+import {circuits} from 'duel-in-the-dark-circuits/circuits';
 
 // One verifier per circuit, all linked to ONE deployment of the libraries in
 // src/verifiers/HonkVerifierBase.sol (circuits/scripts/generate.ts explains why

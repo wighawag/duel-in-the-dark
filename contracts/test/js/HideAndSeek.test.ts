@@ -2,13 +2,13 @@ import {expect} from 'earl';
 import {describe, it, before, after} from 'node:test';
 import {network} from 'hardhat';
 import {parseEther} from 'viem';
-import {createZK, type ZK} from 'template-zk-game-circuits';
-import {circuits} from 'template-zk-game-circuits/circuits';
+import {createZK, type ZK} from 'duel-in-the-dark-circuits';
+import {circuits} from 'duel-in-the-dark-circuits/circuits';
 import {
 	createHideAndSeek,
 	type HideAndSeek,
 	type HideAndSeekSecret,
-} from 'template-zk-game-circuits/hide-and-seek';
+} from 'duel-in-the-dark-circuits/hide-and-seek';
 import {setupFixtures} from './utils/index.js';
 
 // Whole matches with real proofs, through the deploy scripts the app uses.
