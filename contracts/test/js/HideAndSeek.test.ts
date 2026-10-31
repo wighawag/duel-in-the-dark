@@ -240,6 +240,28 @@ describe('HideAndSeek', function () {
 		expect([s.turnSeat, s.actionPoints]).toEqual([m.other, 2]);
 	});
 
+	it('counts turns from 1, and the count changes nothing else', async function () {
+		const m = await startedMatch();
+		expect((await m.state()).turn).toEqual(1);
+		for (const [seat, turn] of [
+			[m.turn, 2],
+			[m.other, 3],
+		] as const) {
+			await m.env.execute(m.HideAndSeek, {
+				functionName: 'endTurn',
+				args: [m.matchId, m.players[seat]],
+				account: m.players[seat],
+			});
+			const s = await m.state();
+			expect([s.turn, s.turnSeat, s.actionPoints, s.awaiting]).toEqual([
+				turn,
+				seat === 0 ? 1 : 0,
+				2,
+				0,
+			]);
+		}
+	});
+
 	it('refuses a sender acting for a player it is not a delegate of', async function () {
 		const {env, HideAndSeek, matchId, players, turn, unnamedAccounts} =
 			await startedMatch();
