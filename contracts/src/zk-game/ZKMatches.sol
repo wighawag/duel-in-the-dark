@@ -133,6 +133,7 @@ abstract contract ZKMatches is UsingDelegation {
     error DeadlinePassed(uint64 deadline);
     error DeadlineNotPassed(uint64 deadline);
     error NotEnoughActionPoints(uint8 available, uint8 needed);
+    error TurnNotOver(uint256 matchId);
     error NotAFieldElement(bytes32 value);
     error InvalidProof();
     error NothingToWithdraw();
@@ -259,9 +260,13 @@ abstract contract ZKMatches is UsingDelegation {
         }
     }
 
-    /// @notice A player passes the rest of their turn.
+    /// @notice A player passes the rest of their turn, unless the game says
+    ///         something is still owed in it ({_turnMayEnd}).
     function endTurn(uint256 matchId, address player) external {
         _requireTurn(matchId, player);
+        if (!_turnMayEnd(matchId)) {
+            revert TurnNotOver(matchId);
+        }
         _matches[matchId].actionPoints = 0;
         _settle(matchId);
     }
@@ -296,6 +301,15 @@ abstract contract ZKMatches is UsingDelegation {
         uint256 matchId,
         uint8 seat
     ) internal view virtual returns (uint8);
+
+    /// @notice Whether the turn holder may stop now. Return false while the
+    ///         game's rules still owe an action in this turn, one that costs no
+    ///         action point and is not a query (a forced move after a shot,
+    ///         say): the turn then neither passes in {_settle} nor ends by
+    ///         {endTurn}, and a timeout falls on the turn holder.
+    function _turnMayEnd(uint256) internal view virtual returns (bool) {
+        return true;
+    }
 
     /// @notice Which seat plays first. Defaults to a coin flip on
     ///         `block.prevrandao`, which a block proposer could bias by one bit;
@@ -428,11 +442,15 @@ abstract contract ZKMatches is UsingDelegation {
     }
 
     /// @notice Call at the end of every action: once the turn holder has no
-    ///         action points left and nothing is pending, the turn passes.
+    ///         action points left, nothing is pending and the game has nothing
+    ///         more owed in the turn ({_turnMayEnd}), the turn passes.
     function _settle(uint256 matchId) internal {
         Match storage m = _matches[matchId];
         if (
-            m.status == Status.Active && m.awaiting == 0 && m.actionPoints == 0
+            m.status == Status.Active &&
+            m.awaiting == 0 &&
+            m.actionPoints == 0 &&
+            _turnMayEnd(matchId)
         ) {
             _startTurn(matchId, _otherSeat(m.turnSeat));
         }

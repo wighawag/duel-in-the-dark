@@ -229,6 +229,17 @@ describe('HideAndSeek', function () {
 		).toBeRejectedWith('QueryPending');
 	});
 
+	it('passes the turn on endTurn, with points left (the default _turnMayEnd)', async function () {
+		const m = await startedMatch();
+		await m.env.execute(m.HideAndSeek, {
+			functionName: 'endTurn',
+			args: [m.matchId, m.players[m.turn]],
+			account: m.players[m.turn],
+		});
+		const s = await m.state();
+		expect([s.turnSeat, s.actionPoints]).toEqual([m.other, 2]);
+	});
+
 	it('refuses a sender acting for a player it is not a delegate of', async function () {
 		const {env, HideAndSeek, matchId, players, turn, unnamedAccounts} =
 			await startedMatch();
