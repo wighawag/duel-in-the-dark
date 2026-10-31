@@ -11,6 +11,8 @@ touches: branch `noir` (circuits/, contracts/, web/)
 
 This branch is not part of the main working tree. Read a file with `git show work:<path>`.
 
+Built on branch `noir` (2026-10-31): circuits, contract, web and every test layer as specified below, with one difference: in Solidity the `sealed` field is named `sealedRoom` (`sealed` is a reserved word), and so in TypeScript, which mirrors the contract's struct.
+
 ## Scope
 
 Parity with the 2023 demo, rebuilt on template-zk-game: the ship map; a hidden starting room proven valid; Move (hidden, proven adjacent); Shoot (reveal, shoot-list check, the opponent's proven hit-or-miss answer as a ZKMatches query, then the shooter's forced free move); 2 action points per turn; 2 hits to win; ETH stake and payout; deadlines and `claimTimeout`; the ship SVG in Svelte; a lobby; backup and restore of hidden state.
