@@ -17,7 +17,7 @@ import {createGameState, type GameStateStore} from './state.js';
  * WHAT THIS APP'S BROWSER KEY IS FOR, in the sentences of ui/delegation/grant.ts
  * ("so the app can play your turns without asking you to sign every time").
  * Accurate on purpose: stakes and withdrawals still go through the wallet, see
- * routes/hide-and-seek/lib/send.ts.
+ * $lib/zk-game/send.ts.
  */
 /**
  * THE GAME'S NAME AND PAGE, for the inherited chrome that links to it (the

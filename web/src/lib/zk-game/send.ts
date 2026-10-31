@@ -14,8 +14,8 @@ import {NotRegisteredError} from '$lib/ui/delegation/delegation-check';
 import type {Abi, ContractFunctionParameters} from 'viem';
 
 /**
- * Sending, the way routes/demo/lib/setGreeting.ts does it, for any call of a
- * match game. Two senders, chosen per action and never mixed:
+ * Sending, for any call of a match game built on ZKMatches. Shared by every
+ * game's client (routes/hide-and-seek/lib/game.ts is the worked example). Two senders, chosen per action and never mixed:
  *
  * - FROM THE ACCOUNT (wallet prompt) for what moves the player's money: a
  *   stake into `createMatch` / `joinMatch`, and `withdraw`. The account is the
@@ -142,7 +142,7 @@ async function send(run: () => Promise<SendResult>): Promise<SendResult> {
 		}
 		const refusal = connectionRefusal(error);
 		if (refusal && isUserDecision(refusal)) return {status: 'cancelled'};
-		console.error('hide-and-seek: transaction failed', error);
+		console.error('zk-game: transaction failed', error);
 		return {
 			status: 'error',
 			message: txErrorSummary(error),

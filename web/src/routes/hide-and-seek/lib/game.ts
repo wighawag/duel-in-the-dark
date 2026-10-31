@@ -14,7 +14,7 @@ import {
 	type SendDeps,
 	type SendResult,
 	type WriteRequest,
-} from './send';
+} from '$lib/zk-game/send';
 
 /**
  * The reference game's client: what the /hide-and-seek page shows and does.
