@@ -1,32 +1,26 @@
 import {deployScript, artifacts} from '../rocketh/deploy.js';
 
-// The template's reference game (src/HideAndSeek). A descendant replaces this
-// script with its own game's, wired to its own verifiers the same way.
+// duel-in-the-dark's game contract (src/Duel), wired to its four verifiers.
 
 /** How long a player has to act on their turn, in seconds. */
 const TURN_DURATION = 10 * 60;
-/** How long a player has to answer a query, in seconds. */
+/** How long a player has to answer a shot, in seconds. */
 const RESPONSE_DURATION = 5 * 60;
 
 export default deployScript(
 	async (env) => {
 		const {deployer, admin} = env.namedAccounts;
 
-		const verifiers = {
-			inRange: env.get('InRangeVerifier').address,
-			move: env.get('MoveOnRingVerifier').address,
-			answer: env.get('AnswerGuessVerifier').address,
-		};
-
 		await env.deployViaProxy(
-			'HideAndSeek',
+			'Duel',
 			{
 				account: deployer,
-				artifact: artifacts.HideAndSeek,
+				artifact: artifacts.Duel,
 				args: [
-					verifiers.inRange,
-					verifiers.move,
-					verifiers.answer,
+					env.get('DuelStartVerifier').address,
+					env.get('DuelMoveVerifier').address,
+					env.get('DuelShootVerifier').address,
+					env.get('DuelAnswerShotVerifier').address,
 					BigInt(TURN_DURATION),
 					BigInt(RESPONSE_DURATION),
 				],
@@ -34,8 +28,8 @@ export default deployScript(
 			{
 				owner: admin,
 				linkedData: {
-					cells: 8,
 					actionPoints: 2,
+					lives: 2,
 					turnDuration: TURN_DURATION,
 					responseDuration: RESPONSE_DURATION,
 				},
@@ -43,5 +37,5 @@ export default deployScript(
 			},
 		);
 	},
-	{tags: ['HideAndSeek', 'HideAndSeek_deploy'], dependencies: ['Verifiers']},
+	{tags: ['Duel', 'Duel_deploy'], dependencies: ['Verifiers']},
 );

@@ -13,9 +13,9 @@
 			"types": "./dist/src/field.d.ts",
 			"default": "./dist/src/field.js"
 		},
-		"./hide-and-seek": {
-			"types": "./dist/src/hide-and-seek.d.ts",
-			"default": "./dist/src/hide-and-seek.js"
+		"./duel": {
+			"types": "./dist/src/duel.d.ts",
+			"default": "./dist/src/duel.js"
 		},
 		"./circuits": {
 			"types": "./dist/generated/index.d.ts",

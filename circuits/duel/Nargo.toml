@@ -1,6 +1,6 @@
 [package]
-name = "answer_guess"
-type = "bin"
+name = "duel"
+type = "lib"
 authors = [""]
 
 [dependencies]

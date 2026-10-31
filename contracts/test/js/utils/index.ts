@@ -1,5 +1,6 @@
 import {Abi_InRangeVerifier} from '../../../generated/abis/InRangeVerifier.js';
-import {Abi_HideAndSeek} from '../../../generated/abis/HideAndSeek.js';
+import {Abi_DuelShootVerifier} from '../../../generated/abis/DuelShootVerifier.js';
+import {Abi_Duel} from '../../../generated/abis/Duel.js';
 import {loadAndExecuteDeploymentsFromFiles} from '../../../rocketh/environment.js';
 import {EthereumProvider} from 'hardhat/types/providers';
 
@@ -14,12 +15,15 @@ export function setupFixtures(provider: EthereumProvider) {
 			//  network or even be different from current artifacts so here
 			//  we type them manually assuming the artifact is still matching
 			const InRangeVerifier = env.get<Abi_InRangeVerifier>('InRangeVerifier');
-			const HideAndSeek = env.get<Abi_HideAndSeek>('HideAndSeek');
+			const DuelShootVerifier =
+				env.get<Abi_DuelShootVerifier>('DuelShootVerifier');
+			const Duel = env.get<Abi_Duel>('Duel');
 
 			return {
 				env,
 				InRangeVerifier,
-				HideAndSeek,
+				Duel,
+				DuelShootVerifier,
 				namedAccounts: env.namedAccounts,
 				unnamedAccounts: env.unnamedAccounts,
 			};

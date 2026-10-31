@@ -1,7 +1,8 @@
 [package]
-name = "move_on_ring"
+name = "duel_move"
 type = "bin"
 authors = [""]
 
 [dependencies]
 commitment = { path = "../commitment" }
+duel = { path = "../duel" }
