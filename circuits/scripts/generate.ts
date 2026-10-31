@@ -49,7 +49,7 @@ const zk = await createZK();
 let base: string | undefined;
 try {
 	for (const name of names) {
-		const raw = readFileSync(join(targetDir, `${name}.json`), 'utf8');
+		const raw = withPortablePaths(readFileSync(join(targetDir, `${name}.json`), 'utf8'));
 		const circuit = JSON.parse(raw) as CompiledCircuit;
 		writeFileSync(join(generatedDir, `${name}.json`), raw);
 
@@ -138,6 +138,24 @@ function splitVerifier(solidity: string): {key: string; base: string} {
 		);
 	}
 	return {key, base: solidity.slice(secondPragma + 1, contract)};
+}
+
+/**
+ * nargo writes the ABSOLUTE path of every source file into the artifact's
+ * debug `file_map`, so a committed artifact would change with the checkout's
+ * location and the machine's home: a spurious diff on every rebuild elsewhere,
+ * and a conflict for every descendant that rebuilds a circuit it inherited.
+ * Workspace files become relative to circuits/ and git dependencies relative
+ * to nargo's cache (`nargo:github.com/...`). Only debug info is touched; the
+ * bytecode and the ABI are as nargo wrote them.
+ */
+function withPortablePaths(raw: string): string {
+	const artifact = JSON.parse(raw) as {file_map?: Record<string, {path: string}>};
+	for (const file of Object.values(artifact.file_map ?? {})) {
+		if (file.path.startsWith(root + '/')) file.path = file.path.slice(root.length + 1);
+		else file.path = file.path.replace(/^.*\/nargo\//, 'nargo:');
+	}
+	return JSON.stringify(artifact);
 }
 
 function pascal(snake: string): string {
