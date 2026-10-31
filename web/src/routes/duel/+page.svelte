@@ -9,14 +9,20 @@
 	import {
 		LIVES,
 		ROOM_NAMES,
+		actionsFor,
+		gearLine,
 		pickModeFor,
+		queryOf,
 		roleIn,
+		sealedNow,
 		shipView,
 		statusLine,
+		type Intent,
 	} from './lib/view';
+	import {describe, sightingLine, sightingOf} from './lib/history';
 
 	const game = createDuelGame(getAppContext());
-	const {view, activity} = game;
+	const {view, activity, history} = game;
 
 	let now = $state(Math.floor(Date.now() / 1000));
 	$effect(() => {
@@ -28,7 +34,7 @@
 	});
 
 	let pickedRoom = $state(1);
-	let intent = $state<'move' | 'shoot'>('move');
+	let intent = $state<Intent>('move');
 	let stake = $state('0.01');
 	let selectedId = $state<bigint | undefined>(undefined);
 	let backup = $state('');
@@ -36,33 +42,42 @@
 	let player = $derived($view.step === 'Loaded' ? $view.player : undefined);
 	let matches = $derived($view.step === 'Loaded' ? $view.matches : []);
 	let selected = $derived(matches.find((m) => m.id === selectedId));
+	$effect(() => game.watch(selectedId));
 	let busy = $derived(
 		$activity.step === 'proving' || $activity.step === 'sending',
 	);
 	let role = $derived(selected ? roleIn(selected, player, now) : undefined);
-	let myRoom = $derived(selected ? game.myRoom(selected, player) : undefined);
+	let me = $derived(selected ? game.mySecret(selected, player) : undefined);
+	let myRoom = $derived(me?.room);
+	let can = $derived(
+		selected && role ? actionsFor(selected, role, me) : undefined,
+	);
 	let mode = $derived(
 		selected && role
 			? selected.status === 'Open' && role.canJoin
 				? 'start'
 				: busy
 					? 'none'
-					: pickModeFor(selected, role, intent)
+					: pickModeFor(selected, role, intent, me)
 			: 'start',
 	);
+	let sighting = $derived(sightingOf($history, role?.seat));
 	let rooms = $derived(
 		shipView({
-			myRoom: selected ? myRoom : undefined,
+			match: selected,
+			me: selected ? me : undefined,
 			mode,
-			shot: role?.shot,
+			query: selected && role ? queryOf(selected, role) : undefined,
+			seen: sighting.room,
+			near: sighting.near,
 			selected: mode === 'start' ? pickedRoom : undefined,
 		}),
 	);
+	let sealed = $derived(selected ? sealedNow(selected) : undefined);
 
 	function pick(room: number) {
 		if (!selected || mode === 'start') pickedRoom = room;
-		else if (mode === 'move') game.move(selected, room);
-		else if (mode === 'shoot') game.shoot(selected, room);
+		else game.pick(selected, mode, room);
 	}
 
 	function label(m: MatchSummary) {
@@ -76,11 +91,11 @@
 	<header class="flex flex-col gap-2">
 		<h1 class="text-2xl font-semibold">Duel in the Dark</h1>
 		<p class="text-muted-foreground">
-			Alien against human, somewhere on a dark ship. Your room is hidden behind
-			a commitment, and every move is proven. Each turn has 2 action points:
-			move to an adjacent room (1), or shoot into a room you can see (2), which
-			gives your room away and forces a free move after the answer. Two hits and
-			you lose.
+			Alien against human, somewhere on a dark ship. Your room, traps and charge
+			are hidden behind a commitment, and every action is proven. Each turn has
+			2 action points: move (1), shoot into a room you can see (2, which gives
+			you away and forces a free move), listen (1), set or set off a trap (1),
+			or use your room's effect. Two hits and you lose.
 		</p>
 	</header>
 
@@ -116,6 +131,11 @@
 						: ROOM_NAMES[myRoom as keyof typeof ROOM_NAMES]}. Hits taken: you {role.myHits}/{LIVES},
 					them {role.theirHits}/{LIVES}.
 				</p>
+				<p class="text-sm text-muted-foreground" data-testid="gear">
+					{gearLine(me)}
+					{#if sealed}The {ROOM_NAMES[sealed as keyof typeof ROOM_NAMES]} is sealed.{/if}
+					{sightingLine(sighting) ?? ''}
+				</p>
 			{/if}
 			<p data-testid="status">
 				{statusLine(selected, role)}
@@ -140,32 +160,109 @@
 					>
 				{/if}
 			{:else if selected.status === 'Active'}
-				{#if role.myTurn}
+				{#if role.myTurn && can}
 					<div class="flex flex-wrap items-center gap-2">
 						<Button
 							variant={intent === 'move' ? 'default' : 'outline'}
-							disabled={busy}
+							disabled={busy || !can.move}
 							onclick={() => (intent = 'move')}>Move</Button
 						>
 						<Button
 							variant={intent === 'shoot' ? 'default' : 'outline'}
-							disabled={busy || selected.board.ap < 2}
+							disabled={busy || !can.shoot}
 							onclick={() => (intent = 'shoot')}>Shoot</Button
 						>
+						<Button
+							variant="outline"
+							disabled={busy || !can.listen}
+							onclick={() => game.listen(selected)}>Listen</Button
+						>
+						<Button
+							variant={intent === 'replace' ? 'default' : 'outline'}
+							disabled={busy || !can.setTrap}
+							onclick={() =>
+								can?.setTrapReplaces
+									? (intent = 'replace')
+									: game.setTrap(selected)}>Set a trap</Button
+						>
+						<Button
+							variant={intent === 'detonate' ? 'default' : 'outline'}
+							disabled={busy || !can.detonate}
+							onclick={() => (intent = 'detonate')}>Detonate</Button
+						>
+						{#if can.remoteCharge}
+							<Button
+								variant={intent === 'charge' ? 'default' : 'outline'}
+								disabled={busy}
+								onclick={() => (intent = 'charge')}>Remote Charge</Button
+							>
+						{/if}
+						{#if can.coolantPurge}
+							<Button
+								variant="outline"
+								disabled={busy}
+								onclick={() => game.coolantPurge(selected)}
+								>Coolant Purge</Button
+							>
+						{/if}
+						{#if can.maintenanceChute}
+							<Button
+								variant="outline"
+								disabled={busy}
+								onclick={() => game.maintenanceChute(selected)}
+								>Maintenance Chute</Button
+							>
+						{/if}
+						{#if can.dropDown}
+							<Button
+								variant="outline"
+								disabled={busy}
+								onclick={() => game.dropDown(selected)}>Drop Down</Button
+							>
+						{/if}
+						{#if can.stimRations}
+							<Button
+								variant="outline"
+								disabled={busy}
+								onclick={() => game.stimRations(selected)}>Stim Rations</Button
+							>
+						{/if}
+						{#if can.motionTracker}
+							<Button
+								variant="outline"
+								disabled={busy}
+								onclick={() => game.motionTracker(selected)}
+								>Motion Tracker</Button
+							>
+						{/if}
 						<Button
 							variant="outline"
 							disabled={busy}
 							onclick={() => game.endTurn(selected)}>End turn</Button
 						>
 						<span class="text-sm text-muted-foreground"
-							>then click a highlighted room</span
+							>Move, Shoot, Detonate and Remote Charge: then click a highlighted
+							room</span
 						>
 					</div>
 				{/if}
-				{#if role.mustAnswer}
-					<Button disabled={busy} onclick={() => game.answer(selected)}
-						>Answer (proven, truthfully)</Button
+				{#if role.mustFireCharge}
+					<Button disabled={busy} onclick={() => game.fireCharge(selected)}
+						>Set off the Remote Charge</Button
 					>
+				{/if}
+				{#if role.mustAnswer}
+					{#if mode === 'none'}
+						<Button disabled={busy} onclick={() => game.answer(selected)}
+							>Answer (proven, truthfully)</Button
+						>
+					{:else}
+						<p class="text-sm">
+							{mode === 'reveal'
+								? 'Click the room you name (one next to yours).'
+								: 'You must move out of the Engine Room: click where to.'}
+						</p>
+					{/if}
 				{/if}
 				{#if role.timedOut}
 					<Button
@@ -176,6 +273,13 @@
 						Deadline passed: end the match
 					</Button>
 				{/if}
+			{/if}
+			{#if $history.length > 0}
+				<ol class="flex flex-col gap-1 text-sm" data-testid="history">
+					{#each $history as entry, i (i)}
+						<li>{describe(entry, role.seat)}</li>
+					{/each}
+				</ol>
 			{/if}
 		</div>
 	{:else}
@@ -216,7 +320,7 @@
 					{label(m)}
 					{#if r.seat !== undefined}
 						· yours{/if}
-					{#if r.myTurn || r.mustAnswer || r.mustMoveAfterShot}
+					{#if r.myTurn || r.mustAnswer || r.mustMoveAfterShot || r.mustFireCharge}
 						· <strong>your move</strong>{/if}
 				</button>
 			{/each}

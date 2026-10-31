@@ -7,15 +7,24 @@ import {createEmbeddedWorld, type EmbeddedWorld} from '$lib/embedded';
 import {config, extensions} from 'duel-in-the-dark-contracts/rocketh/config.js';
 import {createZK} from 'duel-in-the-dark-circuits';
 import {circuits} from 'duel-in-the-dark-circuits/circuits';
-import {createDuel, type DuelSecret} from 'duel-in-the-dark-circuits/duel';
+import {
+	createDuel,
+	type DuelSecret,
+	type Transition,
+} from 'duel-in-the-dark-circuits/duel';
 import {createDuelGame} from '../../../src/routes/duel/lib/game';
 import {createDuelState} from '$lib/duel/state';
 import {createSecretStore} from '../../../src/routes/duel/lib/secrets';
 import {roleIn} from '../../../src/routes/duel/lib/view';
+import {
+	describe as describeEntry,
+	type HistoryEntry,
+} from '../../../src/routes/duel/lib/history';
 import {GAME_SCRIPTS} from '../../lib/game-world';
 
 // The /duel page's READ side against a real chain (an embedded world running
-// the app's deploy scripts): two players play a shot through the contract,
+// the app's deploy scripts): two players play a shot or a listen (whichever the
+// coin flip allows) through the contract,
 // with real proofs, and after each step the page's polling store and secret
 // lookup must describe what actually happened. The contract tests cover the
 // rules; the sending side is the e2e (web/e2e/tests/duel.e2e.ts).
@@ -103,6 +112,17 @@ describe('/duel against an embedded chain', () => {
 			});
 			expect(receipt.status).toBe('success');
 		}
+		/** The watched match's history, once it has `n` entries. */
+		function historyOf(n: number): Promise<HistoryEntry[]> {
+			return new Promise((resolve) => {
+				const stop = game.history.subscribe((h) => {
+					if (h.length >= n) {
+						resolve(h);
+						queueMicrotask(() => stop());
+					}
+				});
+			});
+		}
 		async function latest() {
 			const v = await game.view.update();
 			if (v.step !== 'Loaded') throw new Error('not loaded');
@@ -153,27 +173,26 @@ describe('/duel against an embedded chain', () => {
 			const turn = m.board.actor;
 			const other = 1 - turn;
 			const now = Math.floor(Date.now() / 1000);
+			const act = (seat: number, t: Transition) =>
+				send(seat, 'act', [
+					m.id,
+					accounts[seat].address,
+					t.circuit,
+					t.next,
+					t.proof.proof,
+				]);
+			game.watch(m.id);
 			if (turn === 0) {
 				const shot = await client.shoot(m.board, mine[0], 7);
-				await send(0, 'shoot', [
-					m.id,
-					accounts[0].address,
-					shot.next,
-					shot.proof.proof,
-				]);
+				await act(0, shot);
 				m = await latest();
 				expect(roleIn(m, accounts[1].address, now)).toMatchObject({
 					mustAnswer: true,
 					shot: {from: 4, into: 7, byMe: false},
 				});
-				const answer = await client.answerShot(m.board, mine[1]);
+				const answer = await client.answer(m.board, mine[1]);
 				expect(answer.hit).toBe(true);
-				await send(1, 'answerShot', [
-					m.id,
-					accounts[1].address,
-					answer.next,
-					answer.proof.proof,
-				]);
+				await act(1, answer);
 				m = await latest();
 				expect(roleIn(m, accounts[0].address, now)).toMatchObject({
 					mustMoveAfterShot: true,
@@ -181,28 +200,38 @@ describe('/duel against an embedded chain', () => {
 				});
 				const moved = await client.move(m.board, mine[0], 2);
 				secrets[0].put(moved.secret);
-				await send(0, 'move', [
-					m.id,
-					accounts[0].address,
-					moved.next,
-					moved.proof.proof,
-				]);
+				await act(0, moved);
 				m = await latest();
 				expect(game.myRoom(m, accounts[0].address)).toBe(2);
 				expect(roleIn(m, accounts[1].address, now).myTurn).toBe(true);
+				const h = await historyOf(3);
+				expect(h.map((e) => describeEntry(e, 1))).toEqual([
+					'They shot from the Observation Gantry into the Cargo Hold.',
+					'You were hit in the Cargo Hold.',
+					'They slipped out of the room their shot gave away.',
+				]);
 			} else {
+				// seat 1 (in the Cargo Hold) listens, seat 0 (in the Gantry) answers
+				const listen = await client.listen(m.board);
+				await act(1, listen);
+				m = await latest();
+				expect(roleIn(m, accounts[0].address, now).mustAnswer).toBe(true);
+				const answer = await client.answer(m.board, mine[0], {reveal: 2});
+				await act(0, answer);
+				m = await latest();
+				expect([m.board.phase, m.board.argB, m.board.ap]).toEqual([0, 2, 1]);
 				const moved = await client.move(m.board, mine[1], 8);
 				secrets[1].put(moved.secret);
-				await send(1, 'move', [
-					m.id,
-					accounts[1].address,
-					moved.next,
-					moved.proof.proof,
-				]);
+				await act(1, moved);
 				m = await latest();
 				expect(game.myRoom(m, accounts[1].address)).toBe(8);
-				expect(m.board.ap).toBe(1);
-				expect(roleIn(m, accounts[other].address, now).myTurn).toBe(false);
+				expect(roleIn(m, accounts[other].address, now).myTurn).toBe(true);
+				const h = await historyOf(3);
+				expect(h.map((e) => describeEntry(e, 1))).toEqual([
+					'You listened.',
+					'They named the Bridge, next to their room.',
+					'You moved.',
+				]);
 			}
 			expect(get(game.view).step).toBe('Loaded');
 		} finally {

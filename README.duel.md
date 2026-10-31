@@ -1,6 +1,6 @@
 # duel-in-the-dark
 
-Alien against human, somewhere on a dark ship. Each player's room is hidden behind a commitment that nobody, the contract included, can open; every move is proven in zero knowledge, a shot gives the shooter's room away, and the target must answer with a proof of whether it was hit. Two hits lose, and the winner takes both stakes.
+Alien against human, somewhere on a dark ship. Each player's room, traps and Remote Charge are hidden behind a commitment that nobody, the contract included, can open; every action is proven in zero knowledge, a shot or a room effect gives the player's room away, and whatever asks the other player something (a shot, a listen, a trap going off) is answered with a proof it cannot lie in. Two hits lose, and the winner takes both stakes.
 
 A digital take inspired by the card game *Revolver Noir* (Xavier Davidson, Button Shy), re-themed. The rules here are this game's own; nothing of the card game's text is reproduced.
 
@@ -23,7 +23,22 @@ Rooms 1 to 4 are the upper deck, 5 to 8 the lower. Both tables are directed ("fr
 
 ## A turn
 
-2 action points. **Move** (1): to an adjacent room, hidden and proven. **Shoot** (2): reveal your room and shoot into one it can see; the opponent answers with a proof (it cannot lie), then you make a free, hidden move out of the room you gave away. **End turn** passes what is left. Every wait has a deadline, after which anyone can end the match against whoever was being waited for.
+2 action points (3 with Stim Rations). Each action is announced; only what the rules say is revealed.
+
+- **Move** (1): to an adjacent room, hidden.
+- **Shoot** (2): reveal your room and shoot into one it can see; the other answers hit or miss, then you make a free, hidden move out of the room you gave away.
+- **Listen** (1): the other names a room next to its own (its choice, but it must be true).
+- **Trap** (1): set one where you stand (two at most, in two rooms; a third replaces one), or set one off from anywhere, revealing its room: the other is hit if it is there, never you.
+- **Room effects**, which reveal your room:
+  - Cryo Bay, *Coolant Purge* (1): whoever is in the Engine Room is hit and must move out; the Engine Room is sealed until your next turn.
+  - Science Lab, *Maintenance Chute* (1): whoever is in the Galley drops to the Engine Room, silently; if it is sealed, they are hit and move out.
+  - Observation Gantry, *Drop Down* (0): straight to the Galley.
+  - Galley, *Stim Rations* (0): start your turn here for a third action point.
+  - Cargo Hold, *Motion Tracker* (0, once a turn): a free listen, but someone on the upper deck must name their exact room.
+  - Engine Room, *Remote Charge* (1): a hidden charge in any other room, outside the two-trap limit; it goes off by itself at the start of your next turn, before anything else.
+- **End turn** passes what is left.
+
+Every wait has a deadline, after which anyone can end the match against whoever was being waited for (a turn whose Remote Charge is due cannot end until it goes off).
 
 ## Where the rules live
 
@@ -32,11 +47,13 @@ In the circuits. `circuits/duel/src/lib.nr` holds the ship and one function per 
 | circuit | proves |
 | --- | --- |
 | `duel_start` | a valid starting room (any of the 8) behind a commitment |
-| `duel_move` | a move to an adjacent room: 1 AP, or free right after a shot, out of the revealed room |
+| `duel_move` | a move (1 AP), the free move after a shot, or the Drop Down |
 | `duel_shoot` | the shooter's room (revealed) and a target it can see: 2 AP |
-| `duel_answer_shot` | the truthful hit or miss |
+| `duel_trap` | setting or setting off a trap, setting the Remote Charge, and its going off |
+| `duel_effect` | a listen, and the Coolant Purge, Maintenance Chute, Stim Rations and Motion Tracker |
+| `duel_answer` | the truthful answer to any of the above, including the move a hit forces |
 
-The hidden state also has slots for traps and a charge (always empty for now), so later rules fill a layout that already exists. The design, with every public input, is on the `work` branch: `git show work:work/specs/accepted/milestone-c-noir-parity.md`.
+The contract takes every action through one function, `act(matchId, player, circuit, next, proof)`, and emits `Acted` for each, which is the match's history. The design, with every public input, is on the `work` branch: `git show work:work/specs/accepted/milestone-d-full-card-game.md` (and its predecessor, `milestone-c-noir-parity.md`).
 
 ## Playing locally
 
@@ -44,4 +61,4 @@ The hidden state also has slots for traps and a charge (always empty for now), s
 
 ## Cost
 
-About 3.6 to 3.7 million gas per proven action (UltraHonk with zero knowledge), so a shot (shoot, answer, free move) is about 11 million. This belongs on an L2.
+About 3.7 to 3.9 million gas per proven action (UltraHonk with zero knowledge), so a shot (shoot, answer, free move) is about 11.5 million, and anything that asks the other player something costs two proofs. This belongs on an L2, and a later milestone moves play into a state channel.
