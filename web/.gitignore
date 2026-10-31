@@ -1,24 +1,21 @@
-# environment variables
-.env*.local
-
-# node modules
 node_modules
 
-# vscode
-.vscode/*
-!.vscode/settings.json.default
-!.vscode/launch.json.default
-!.vscode/extensions.json.default
-
-# data generated
-/build
+# Output
 /.svelte-kit
-/package
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+/build
 
 # pwag
 static/pwa
 
-# generated from contracts
-src/lib/blockchain/data/contracts.ts
+# Env
+*.local
+
+src/lib/deployments.ts
+
+.yalc
+yalc.lock
+# Playwright
+test-results
+playwright-report/
+blob-report/
+.playwright

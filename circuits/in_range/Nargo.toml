@@ -1,0 +1,7 @@
+[package]
+name = "in_range"
+type = "bin"
+authors = [""]
+
+[dependencies]
+commitment = { path = "../commitment" }

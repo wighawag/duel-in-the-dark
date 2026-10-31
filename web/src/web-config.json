@@ -1,17 +1,14 @@
 {
-	"name": "Duel In The Dark",
-	"title": "Duel In The Dark - Template for Decentralised Applications.",
-	"description": "Build and Deploy for Eternity. Duel In The Dark is a production-ready template for decentralised applications.",
-	"canonicalURL": "https://duel-in-the-dark.eth.limo",
-	"ENSName": "duel-in-the-dark.eth",
+	"name": "Duel in the Dark",
+	"title": "Duel in the Dark",
+	"description": "Alien versus humans on a ship, in the dark: hidden moves proven in zero knowledge",
+	"canonicalURL": "http://localhost:8080",
+	"repoURL": "https://github.com/wighawag/duel-in-the-dark",
+	"communityURL": "",
+	"ENSName": null,
 	"themeColor": "#000000",
 	"appleStatusBarStyle": "black-translucent",
 	"icon": "static/icon.svg",
-	"maskableIcons": [
-		{
-			"src": "../maskable_icon_512x512.png",
-			"type": "image/png",
-			"sizes": "512x512"
-		}
-	]
+	"preview": "static/preview.png",
+	"maskable": true
 }

@@ -1,5 +1,4 @@
-out
-ceremony
-node_modules
-contracts
-input.json
+# nargo output; the committed form of a circuit is generated/
+target/
+dist/
+node_modules/

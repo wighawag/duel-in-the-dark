@@ -1,13 +1,25 @@
-node_modules
-cache
-artifacts
-.vscode/*
-!*.default
-generated
-deployments/localhost
+/node_modules
 
 *.local
 
-coverage
-coverage.json
-typechain-types
+# rocketh
+generated
+deployments/localhost
+deployments/hardhat*
+deployments/lan
+deployments/default
+deployments/ephemeral
+_metadata
+
+# hardhat
+/coverage
+/coverage.json
+/.coverage-config.json
+/.coverage-data.json
+cache
+artifacts
+docs
+
+dist/
+
+purgatory.db

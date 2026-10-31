@@ -1,68 +1,68 @@
 <script lang="ts">
-	import {name} from 'web-config';
-	import {route, url} from '$lib/utils/path';
+	import {route} from '$lib';
+	import {GAME} from '$app-specific';
+	import {url} from '$lib/kit/paths';
+	import Button from '$lib/shadcn/ui/button/button.svelte';
+	import DefaultHead from '../lib/metadata/DefaultHead.svelte';
+	import {name} from '../web-config.json';
+	import {onMount} from 'svelte';
+
+	const words = ['Idea', 'Game', 'App'];
+	let currentWordIndex = $state(0);
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			currentWordIndex = (currentWordIndex + 1) % words.length;
+		}, 2000);
+
+		return () => clearInterval(interval);
+	});
 </script>
 
-<section class="py-2 px-4 text-center">
-	<div class="max-w-auto md:max-w-lg mx-auto">
+<DefaultHead />
+
+<div class="container mx-auto max-w-6xl px-4 py-12">
+	<!-- Hero Section -->
+	<div class="mb-16 flex flex-col items-center text-center">
 		<img
-			class="mb-1 mx-auto"
 			src={url('/icon.svg')}
 			alt={name}
-			style="width:256px;height:256px;"
-			width="256px"
-			height="256px"
+			class="mb-8 h-48 w-48 drop-shadow-lg"
 		/>
-		<h2
-			class="mb-2 text-title font-black bg-gradient-to-br from-pink-600 via-pink-600 to-purple-600 bg-clip-text text-transparent box-decoration-clone"
-		>
+		<h1 class="mb-4 text-5xl font-bold tracking-tight text-primary md:text-6xl">
 			{name}
-		</h2>
-		<div class="!text-xl flex justify-center space-x-2">
-			<h3>
-				<span class="bg-gradient-to-br from-blue-500 to-cyan-300 bg-clip-text text-transparent box-decoration-clone"
-					>Build</span
-				>
-			</h3>
-			<h3>and</h3>
-			<h3>
-				<span class="bg-gradient-to-br from-red-500 to-yellow-500 bg-clip-text text-transparent box-decoration-clone"
-					>Deploy</span
-				>
-			</h3>
-			<h3>for</h3>
-			<h3>
-				<span class="bg-gradient-to-br from-pink-500 to-violet-500 bg-clip-text text-transparent box-decoration-clone"
-					>Eternity.</span
-				>
-			</h3>
-		</div>
-		<p class="my-6 m-6 !text-3xl font-black">Welcome to your <span id="spin" />!</p>
-		<div class="max-w-md mx-auto pt-1 mt-5 space-y-3 md:m-8 md:space-y-5">
-			<div class="space-y-5 sm:flex sm:justify-center sm:space-y-0 sm:space-x-3">
-				<a class="btn btn-primary btn-wide" href={route('/demo/')} aria-label="Try the Demo!">Demo</a>
-			</div>
+		</h1>
+		<p class="mb-6 text-xl text-muted-foreground">
+			<span
+				class="bg-linear-to-br from-blue-500 to-cyan-300 box-decoration-clone bg-clip-text text-transparent"
+				>Build</span
+			>
+			and
+			<span
+				class="bg-linear-to-br from-red-500 to-yellow-500 box-decoration-clone bg-clip-text text-transparent"
+				>Deploy</span
+			>
+			for
+			<span
+				class="bg-linear-to-br from-pink-500 to-violet-500 box-decoration-clone bg-clip-text text-transparent"
+				>Eternity</span
+			>.
+		</p>
+		<p class="mb-8 max-w-2xl text-lg font-semibold">
+			Welcome to your <span
+				class="bg-linear-to-br from-red-500 to-yellow-500 box-decoration-clone bg-clip-text text-transparent"
+				>{words[currentWordIndex]}</span
+			>!
+		</p>
+
+		<!-- Action Buttons -->
+		<div class="mb-8 flex flex-wrap justify-center gap-4">
+			<Button
+				href={route(GAME.route)}
+				size="lg"
+				class="min-w-40 bg-linear-to-r from-pink-600 via-pink-500 to-rose-500 font-semibold text-white shadow-lg transition-all duration-300 hover:from-pink-700 hover:via-pink-600 hover:to-rose-600 hover:shadow-xl"
+				>Play {GAME.name}</Button
+			>
 		</div>
 	</div>
-</section>
-
-<style>
-	#spin {
-		color: #db2777;
-	}
-	#spin:after {
-		content: 'Idea';
-		animation: spin 4s linear infinite;
-	}
-	@keyframes spin {
-		0% {
-			content: 'Idea';
-		}
-		33% {
-			content: 'Game';
-		}
-		66% {
-			content: 'App';
-		}
-	}
-</style>
+</div>

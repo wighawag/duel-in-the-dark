@@ -1,0 +1,7 @@
+[package]
+name = "duel"
+type = "lib"
+authors = [""]
+
+[dependencies]
+commitment = { path = "../commitment" }

@@ -1,36 +1,21 @@
-# ###########################################
+############################################
 # .gitignore
 #############################################
-# environment variables
-.env*.local
-
-# node modules
 node_modules
 
-# vscode
-.vscode/*
-!.vscode/settings.json.default
-!.vscode/launch.json.default
-!.vscode/extensions.json.default
-
-# data generated
-/build
+# Output
 /.svelte-kit
-/package
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+/build
 
 # pwag
 static/pwa
-static/robots.txt
+src/app.html
 
-# generated from contracts
-src/lib/blockchain/data/contracts.ts
-#############################################
+# Env
+*.local
+############################################
 
-# Ignore npm files
 pnpm-lock.yaml
-package.json
+src/lib/shadcn/
 
-#ignore static files
-static/
+# Note .prettierignore is being ignored by vscode prettier plugin, see https://github.com/prettier/prettier-vscode/issues/3465

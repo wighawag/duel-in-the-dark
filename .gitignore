@@ -3,3 +3,14 @@
 
 # node modules
 node_modules/
+
+.vscode/*
+!.vscode/*.default
+
+tmp/
+# Nightshift plan artifacts (keep out of version control)
+.nightshift-plan
+
+.kilo/
+# Scratch space for subagent runs (artifacts, transcripts). Never committed.
+.pi-subagents/

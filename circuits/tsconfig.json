@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"lib": ["es2023", "dom"],
+		"module": "node20",
+		"target": "es2022",
+		"moduleResolution": "node16",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"resolveJsonModule": true,
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"outDir": "dist",
+		"rootDir": ".",
+		"types": ["node"]
+	},
+	"include": ["src", "generated"]
+}
