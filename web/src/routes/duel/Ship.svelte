@@ -10,8 +10,18 @@
 		move: 'fill-zinc-400 hover:fill-zinc-200',
 		shoot: 'fill-red-400 hover:fill-red-300',
 		start: 'fill-zinc-400 hover:fill-zinc-200',
+		detonate: 'fill-orange-400 hover:fill-orange-300',
+		charge: 'fill-yellow-500 hover:fill-yellow-300',
+		replace: 'fill-sky-400 hover:fill-sky-300',
+		reveal: 'fill-emerald-400 hover:fill-emerald-300',
+		flee: 'fill-emerald-400 hover:fill-emerald-300',
 		revealed: 'fill-amber-400',
 		shotAt: 'fill-orange-700',
+		seen: 'fill-amber-200',
+		near: 'fill-amber-100',
+		trap: 'fill-violet-600',
+		charged: 'fill-yellow-700',
+		sealed: 'fill-cyan-800',
 		idle: 'fill-zinc-700',
 	};
 </script>

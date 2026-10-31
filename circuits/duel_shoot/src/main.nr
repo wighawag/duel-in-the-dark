@@ -1,7 +1,7 @@
 // SHOOT: the actor reveals their room and shoots into one it can see. 2 action
-// points. The other seat must answer next (duel_answer_shot), then the
+// points. The other seat must answer next (duel_answer), then the
 // shooter makes a free move (duel_move).
-use duel::{apply_shoot, fresh, Hidden, hidden, SHOT, State};
+use duel::{apply_shoot, fresh, Hidden, hidden, SHOOT, SHOT, State};
 
 fn main(state: pub State, next: pub State, hidden_state: Hidden, salt: Field, target: u8) {
     assert(apply_shoot(state, hidden_state, salt, target) == next, "next is not this shot");
@@ -13,6 +13,8 @@ fn shot(s: State, from: u8, target: u8) -> State {
     n.phase = SHOT;
     n.arg_a = from;
     n.arg_b = target;
+    n.acted = s.turn;
+    n.last = SHOOT;
     n
 }
 
@@ -66,4 +68,36 @@ fn cannot_reveal_another_room() {
 fn cannot_claim_another_target() {
     let s = fresh(5, 1, 0);
     main(s, shot(s, 5, 7), hidden(5), 1, 6);
+}
+
+#[test(should_fail_with = "the Remote Charge goes off first")]
+fn nothing_before_a_due_charge() {
+    let mut s = fresh(5, 1, 1);
+    s.commitments[1] = hidden(5).commit(2);
+    s.armed = 2;
+    main(s, shot(s, 5, 6), hidden(5), 2, 6);
+}
+
+#[test(should_fail_with = "next is not this shot")]
+fn cannot_hide_that_it_acted() {
+    let s = fresh(5, 1, 0);
+    let mut n = shot(s, 5, 6);
+    n.acted = 0;
+    main(s, n, hidden(5), 1, 6);
+}
+
+#[test(should_fail_with = "next is not this shot")]
+fn cannot_pass_for_another_action() {
+    let s = fresh(5, 1, 0);
+    let mut n = shot(s, 5, 6);
+    n.last = 1;
+    main(s, n, hidden(5), 1, 6);
+}
+
+#[test(should_fail_with = "next is not this shot")]
+fn cannot_open_another_query() {
+    let s = fresh(5, 1, 0);
+    let mut n = shot(s, 5, 6);
+    n.phase = 18;
+    main(s, n, hidden(5), 1, 6);
 }

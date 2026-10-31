@@ -36,6 +36,12 @@ export type BoardState = {
 	argA: number;
 	argB: number;
 	sealedRoom: number;
+	turn: number;
+	acted: number;
+	sealedTurn: number;
+	tracked: number;
+	armed: number;
+	last: number;
 };
 
 export type MatchSummary = {

@@ -2,9 +2,16 @@ import {writable, type Readable} from 'svelte/store';
 import type {Context} from '$lib/context/types';
 import type {DuelStateStore, MatchSummary} from '$lib/duel/state';
 import {getZK, getCircuits} from '$lib/zk';
-import type {Duel, DuelSecret, DuelState} from 'duel-in-the-dark-circuits/duel';
+import type {
+	AnswerChoice,
+	Duel,
+	DuelSecret,
+	DuelState,
+	Transition,
+} from 'duel-in-the-dark-circuits/duel';
 import {createSecretStore, type SecretStore} from './secrets';
-import {seatOf} from './view';
+import {createHistory, type HistoryEntry} from './history';
+import {seatOf, type PickMode} from './view';
 import {
 	currentPlayer,
 	sendAsSigner as sendAsSignerTo,
@@ -37,14 +44,37 @@ export type DuelGame = {
 	/** the app context's onchainState: the game's matches, polled */
 	view: DuelStateStore;
 	activity: Readable<Activity>;
+	/** the watched match's history, from its `Acted` events */
+	history: Readable<HistoryEntry[]>;
+	/** which match `history` follows (undefined: none) */
+	watch(matchId: bigint | undefined): void;
 	/** The player's own hidden room in `match`, read from this browser's secrets. */
 	myRoom(match: MatchSummary, player: string | undefined): number | undefined;
+	/** The player's whole hidden state in `match` (room, traps, charge). */
+	mySecret(
+		match: MatchSummary,
+		player: string | undefined,
+	): DuelSecret | undefined;
 	create(room: number, stake: bigint): Promise<void>;
 	join(match: MatchSummary, room: number): Promise<void>;
 	/** a move during play, or the free move after a shot */
 	move(match: MatchSummary, to: number): Promise<void>;
+	dropDown(match: MatchSummary): Promise<void>;
 	shoot(match: MatchSummary, target: number): Promise<void>;
-	answer(match: MatchSummary): Promise<void>;
+	listen(match: MatchSummary): Promise<void>;
+	/** a trap here; with two set, `replace` is the room of the one it replaces */
+	setTrap(match: MatchSummary, replace?: number): Promise<void>;
+	detonate(match: MatchSummary, room: number): Promise<void>;
+	remoteCharge(match: MatchSummary, room: number): Promise<void>;
+	fireCharge(match: MatchSummary): Promise<void>;
+	coolantPurge(match: MatchSummary): Promise<void>;
+	maintenanceChute(match: MatchSummary): Promise<void>;
+	stimRations(match: MatchSummary): Promise<void>;
+	motionTracker(match: MatchSummary): Promise<void>;
+	/** answer the pending query; `choice` is what the rules leave to the player */
+	answer(match: MatchSummary, choice?: AnswerChoice): Promise<void>;
+	/** what clicking `room` does in pick mode `mode` (not 'start': no match yet) */
+	pick(match: MatchSummary, mode: PickMode, room: number): Promise<void>;
 	endTurn(match: MatchSummary): Promise<void>;
 	claimTimeout(match: MatchSummary): Promise<void>;
 	cancel(match: MatchSummary): Promise<void>;
@@ -94,8 +124,9 @@ export function createDuelGame(
 
 	function mySecret(
 		match: MatchSummary,
-		player: string,
+		player: string | undefined,
 	): DuelSecret | undefined {
+		if (!player) return undefined;
 		const seat = seatOf(match, player);
 		return seat === undefined
 			? undefined
@@ -157,12 +188,52 @@ export function createDuelGame(
 
 	const sending = (action: string) => activity.set({step: 'sending', action});
 
-	return {
+	/**
+	 * One proven transition: read the state the chain holds now, prove with
+	 * this player's secret (`prove` gets it), keep any new secret BEFORE
+	 * sending, and send it to `act`.
+	 */
+	function transition(
+		action: string,
+		match: MatchSummary,
+		prove: (
+			duel: Duel,
+			state: DuelState,
+			secret: DuelSecret,
+		) => Promise<Transition & {secret?: DuelSecret}>,
+	) {
+		return run(action, async (player) => {
+			const state = await freshState(match);
+			const seat = requireSeat(match, player);
+			const t = await prove(
+				await prover(),
+				state,
+				requireSecret(state, seat, player),
+			);
+			if (t.secret) secretsFor(player).put(t.secret);
+			sending(action);
+			return sendAsSigner(action, (p) => ({
+				...contract(),
+				functionName: 'act',
+				args: [match.id, p, t.circuit, t.next, t.proof.proof],
+			}));
+		});
+	}
+
+	const history = createHistory({
+		publicClient: context.publicClient,
+		contract,
+	});
+
+	const api: DuelGame = {
 		view,
 		activity,
+		history,
+		watch: (matchId) => history.watch(matchId),
 		myRoom(match, player) {
-			return player ? mySecret(match, player)?.room : undefined;
+			return mySecret(match, player)?.room;
 		},
+		mySecret,
 
 		create(room, stake) {
 			return run('Create a match', async (player) => {
@@ -192,53 +263,57 @@ export function createDuelGame(
 			});
 		},
 
-		move(match, to) {
-			return run('Move', async (player) => {
-				const state = await freshState(match);
-				const seat = requireSeat(match, player);
-				const t = await (
-					await prover()
-				).move(state, requireSecret(state, seat, player), to);
-				secretsFor(player).put(t.secret);
-				sending('Move');
-				return sendAsSigner('Move', (p) => ({
-					...contract(),
-					functionName: 'move',
-					args: [match.id, p, t.next, t.proof.proof],
-				}));
-			});
-		},
+		move: (match, to) =>
+			transition('Move', match, (d, s, x) => d.move(s, x, to)),
+		dropDown: (match) =>
+			transition('Drop Down', match, (d, s, x) => d.dropDown(s, x)),
+		shoot: (match, target) =>
+			transition('Shoot', match, (d, s, x) => d.shoot(s, x, target)),
+		listen: (match) => transition('Listen', match, (d, s) => d.listen(s)),
+		setTrap: (match, replace) =>
+			transition('Set a trap', match, (d, s, x) => d.setTrap(s, x, replace)),
+		detonate: (match, room) =>
+			transition('Detonate', match, (d, s, x) => d.detonate(s, x, room)),
+		remoteCharge: (match, room) =>
+			transition('Remote Charge', match, (d, s, x) =>
+				d.remoteCharge(s, x, room),
+			),
+		fireCharge: (match) =>
+			transition('Set off the Remote Charge', match, (d, s, x) =>
+				d.fireCharge(s, x),
+			),
+		coolantPurge: (match) =>
+			transition('Coolant Purge', match, (d, s, x) => d.coolantPurge(s, x)),
+		maintenanceChute: (match) =>
+			transition('Maintenance Chute', match, (d, s, x) =>
+				d.maintenanceChute(s, x),
+			),
+		stimRations: (match) =>
+			transition('Stim Rations', match, (d, s, x) => d.stimRations(s, x)),
+		motionTracker: (match) =>
+			transition('Motion Tracker', match, (d, s, x) => d.motionTracker(s, x)),
+		answer: (match, choice) =>
+			transition('Answer', match, (d, s, x) => d.answer(s, x, choice)),
 
-		shoot(match, target) {
-			return run('Shoot', async (player) => {
-				const state = await freshState(match);
-				const seat = requireSeat(match, player);
-				const t = await (
-					await prover()
-				).shoot(state, requireSecret(state, seat, player), target);
-				sending('Shoot');
-				return sendAsSigner('Shoot', (p) => ({
-					...contract(),
-					functionName: 'shoot',
-					args: [match.id, p, t.next, t.proof.proof],
-				}));
-			});
-		},
-
-		answer(match) {
-			return run('Answer the shot', async (player) => {
-				const state = await freshState(match);
-				const seat = requireSeat(match, player);
-				const t = await (
-					await prover()
-				).answerShot(state, requireSecret(state, seat, player));
-				sending('Answer the shot');
-				return sendAsSigner('Answer the shot', (p) => ({
-					...contract(),
-					functionName: 'answerShot',
-					args: [match.id, p, t.next, t.proof.proof],
-				}));
-			});
+		pick(match, mode, room) {
+			switch (mode) {
+				case 'move':
+					return api.move(match, room);
+				case 'shoot':
+					return api.shoot(match, room);
+				case 'detonate':
+					return api.detonate(match, room);
+				case 'charge':
+					return api.remoteCharge(match, room);
+				case 'replace':
+					return api.setTrap(match, room);
+				case 'reveal':
+					return api.answer(match, {reveal: room});
+				case 'flee':
+					return api.answer(match, {to: room});
+				default:
+					return Promise.resolve();
+			}
 		},
 
 		endTurn(match) {
@@ -294,4 +369,5 @@ export function createDuelGame(
 			return player ? secretsFor(player).importAll(json) : 0;
 		},
 	};
+	return api;
 }

@@ -2,4 +2,4 @@
 # Every circuit is one member. `pnpm build` compiles them all, then
 # scripts/generate.ts turns each BINARY into an artifact for the prover and a
 # Solidity verifier for the contracts. Libraries (`commitment`) are shared code.
-members = ["commitment", "in_range", "duel", "duel_start", "duel_move", "duel_shoot", "duel_answer_shot"]
+members = ["commitment", "in_range", "duel", "duel_start", "duel_move", "duel_shoot", "duel_trap", "duel_effect", "duel_answer"]
