@@ -10,8 +10,8 @@ const FAUCET_URL = (globalThis as any).process.env.E2E_FAUCET_URL as
 
 const PROVING = 120_000;
 
-async function pickCell(page: Page, cell: number) {
-	await page.locator('svg g[role="button"]').nth(cell).click();
+function room(page: Page, n: number) {
+	return page.locator(`svg g[data-room="${n}"]`);
 }
 
 test.describe('A player with no ETH', () => {
@@ -20,8 +20,8 @@ test.describe('A player with no ETH', () => {
 	// How a player on a LAN box (or any chain with a faucet) starts: a fresh
 	// burner, nothing in it, and "Get ETH" in the insufficient-funds dialog,
 	// which claims from the faucet (PUBLIC_FAUCET_API) and carries on. This
-	// repo's version of the template's suite, which used the greetings demo:
-	// the first thing a player pays for here is a match's stake.
+	// repo's version of template-zk-game's suite, which played Hide and Seek:
+	// the first thing a player pays for here is a duel's stake.
 	test('gets ETH from the faucet, and creates a match', async ({
 		page,
 		connectWallet,
@@ -33,14 +33,16 @@ test.describe('A player with no ETH', () => {
 			if (request.url().startsWith(FAUCET_URL!)) claims.push(request.url());
 		});
 
-		await page.goto('/hide-and-seek/');
+		await page.goto('/duel/');
 		const connect = page.getByRole('button', {name: /^connect$/i}).first();
 		await expect(connect).toBeEnabled({timeout: 60_000});
 		await connect.click();
 		await connectWallet(page, {fund: false});
 
-		await pickCell(page, 2);
-		await page.getByRole('button', {name: 'Create, hiding in cell 2'}).click();
+		await room(page, 5).click();
+		await page
+			.getByRole('button', {name: 'Create, starting in the Galley'})
+			.click();
 		// Walks whatever comes up, the insufficient-funds dialog included: its
 		// "Get ETH" is the faucet.
 		await connectWallet(page, {fund: false});
