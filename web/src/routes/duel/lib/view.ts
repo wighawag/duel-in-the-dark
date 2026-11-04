@@ -24,6 +24,7 @@ import {
 	type Room,
 } from 'duel-in-the-dark-circuits/duel';
 import type {MatchSummary} from '$lib/duel/state';
+import type {Ending} from './history';
 
 /**
  * Everything the page asks about one match from one player's point of view,
@@ -50,6 +51,8 @@ export type MatchRole = {
 	timedOut: boolean;
 	won: boolean;
 	lost: boolean;
+	/** finished with no winner (equal hits at the turn limit): stakes refunded */
+	drawn: boolean;
 	secondsLeft: number;
 	/** hits each side has taken, from this player's point of view */
 	myHits: number;
@@ -81,6 +84,7 @@ export function roleIn(
 	const shotPending =
 		active && (b.phase === PHASE.SHOT || b.phase === PHASE.MOVE_AFTER_SHOT);
 	const due = chargeDue(b);
+	const drawn = match.status === 'Finished' && match.winner === NO_WINNER;
 	return {
 		seat: mine,
 		canJoin:
@@ -95,8 +99,10 @@ export function roleIn(
 		won: match.status === 'Finished' && mine === match.winner,
 		lost:
 			match.status === 'Finished' &&
+			!drawn &&
 			mine !== undefined &&
 			mine !== match.winner,
+		drawn,
 		secondsLeft: Math.max(0, match.deadline - nowSeconds),
 		myHits: mine === undefined ? 0 : b.hits[mine],
 		theirHits: mine === undefined ? 0 : b.hits[1 - mine],
@@ -107,6 +113,80 @@ export function roleIn(
 }
 
 export {LIVES, ROOM_NAMES};
+
+/** `winner` of a draw (ZKMatches' NO_WINNER). */
+export const NO_WINNER = 255;
+
+// ----------------------------------------------------------------------------
+// THE TURN LIMIT
+// ----------------------------------------------------------------------------
+
+/** Whether turn `turn` is the last its holder gets (its next would be past the limit). */
+export function isLastTurnOfHolder(turn: number, maxTurns: number): boolean {
+	return maxTurns !== 0 && turn + 2 > maxTurns;
+}
+
+/** "Turn 7 of 30.", and whose last turn it is near the end. */
+export function turnLine(match: MatchSummary, role: MatchRole): string {
+	const {turn, actor} = match.board;
+	if (match.status !== 'Active') return '';
+	if (match.maxTurns === 0) return `Turn ${turn}.`;
+	const head = `Turn ${turn} of ${match.maxTurns}`;
+	if (!isLastTurnOfHolder(turn, match.maxTurns)) return `${head}.`;
+	const whose =
+		role.seat === undefined
+			? `seat ${actor}'s last turn`
+			: role.seat === actor
+				? 'your last turn'
+				: 'their last turn';
+	const after =
+		turn === match.maxTurns
+			? ' The match ends with it: fewer hits taken wins.'
+			: role.seat !== undefined && role.seat !== actor
+				? ' You have one more.'
+				: '';
+	return `${head}: ${whose}.${after}`;
+}
+
+/** How a finished match ended, in one sentence, from this player's side. */
+export function resultLine(
+	match: MatchSummary,
+	role: MatchRole,
+	ending?: Ending,
+): string {
+	const b = match.board;
+	const score = (a: number, z: number) => `${a} to ${z}`;
+	if (role.drawn) {
+		const [x, y] =
+			role.seat === undefined ? b.hits : [role.myHits, role.theirHits];
+		return `A tie at the turn limit (${score(x, y)} hits): both stakes refunded.`;
+	}
+	const how =
+		ending?.byTimeout === true
+			? 'timeout'
+			: b.phase === PHASE.OVER
+				? 'hits'
+				: ending
+					? 'limit'
+					: undefined;
+	if (role.won)
+		return how === 'timeout'
+			? 'You won: they ran out of time.'
+			: how === 'hits'
+				? 'You won: two hits.'
+				: how === 'limit'
+					? `You won on hits at the turn limit: they took ${role.theirHits}, you ${role.myHits}.`
+					: 'You won the pot.';
+	if (role.lost)
+		return how === 'timeout'
+			? 'You lost: you ran out of time.'
+			: how === 'hits'
+				? 'You lost: two hits.'
+				: how === 'limit'
+					? `You lost on hits at the turn limit: you took ${role.myHits}, they ${role.theirHits}.`
+					: 'You lost.';
+	return `Seat ${match.winner} won.`;
+}
 
 // ----------------------------------------------------------------------------
 // WHAT THE TURN HOLDER MAY DO
@@ -121,6 +201,8 @@ export type Actions = {
 	setTrapReplaces: boolean;
 	detonate: boolean;
 	remoteCharge: boolean;
+	/** a Remote Charge set now would never go off: its setter has no next turn */
+	chargeNeverGoesOff: boolean;
 	dropDown: boolean;
 	coolantPurge: boolean;
 	maintenanceChute: boolean;
@@ -136,6 +218,7 @@ const NOTHING: Actions = {
 	setTrapReplaces: false,
 	detonate: false,
 	remoteCharge: false,
+	chargeNeverGoesOff: false,
 	dropDown: false,
 	coolantPurge: false,
 	maintenanceChute: false,
@@ -170,6 +253,7 @@ export function actionsFor(
 			here === ENGINE_ROOM &&
 			me.charge === 0 &&
 			!isArmed(b, b.actor),
+		chargeNeverGoesOff: isLastTurnOfHolder(b.turn, match.maxTurns),
 		dropDown: here === GANTRY,
 		coolantPurge: ap >= 1 && here === CRYO_BAY,
 		maintenanceChute: ap >= 1 && here === SCIENCE_LAB,
@@ -367,17 +451,16 @@ function roomName(room: number) {
 }
 
 /** One sentence: where the match stands for this player. */
-export function statusLine(match: MatchSummary, role: MatchRole): string {
+export function statusLine(
+	match: MatchSummary,
+	role: MatchRole,
+	ending?: Ending,
+): string {
 	const b = match.board;
 	if (match.status === 'Open')
 		return role.canCancel ? 'Waiting for an opponent.' : 'Open: join it.';
 	if (match.status === 'Cancelled') return 'Cancelled.';
-	if (match.status === 'Finished')
-		return role.won
-			? 'You won the pot.'
-			: role.lost
-				? 'You lost.'
-				: `Seat ${match.winner} won.`;
+	if (match.status === 'Finished') return resultLine(match, role, ending);
 	if (role.timedOut) return 'The deadline passed.';
 	if (role.mustAnswer)
 		return `${QUERY_ASKS[b.phase]?.(b) ?? 'A query'}: answer it.`;

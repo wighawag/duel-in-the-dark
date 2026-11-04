@@ -5,10 +5,13 @@ import {
 	gearLine,
 	pickModeFor,
 	queryOf,
+	resultLine,
 	roleIn,
 	sealedNow,
 	shipView,
 	statusLine,
+	turnLine,
+	NO_WINNER,
 } from '../../../src/routes/duel/lib/view';
 import {
 	describe as describeEntry,
@@ -36,6 +39,7 @@ function match(
 		winner: 0,
 		deadline: 1000,
 		stake: 1n,
+		maxTurns: 30,
 		seats: [
 			{player: A, commitment: '0x01'},
 			{player: B, commitment: '0x02'},
@@ -431,5 +435,90 @@ describe('secrets', () => {
 		expect(isSecret(s)).toBe(true);
 		expect(isSecret({...s, traps: [0]})).toBe(false);
 		expect(isSecret({cell: 3, salt: '1', commitment: '0x1'})).toBe(false);
+	});
+});
+
+describe('the turn limit', () => {
+	it('counts turns, and says whose last turn it is', () => {
+		const line = (turn: number, actor: number, who: string) => {
+			const m = match({}, {turn, actor});
+			return turnLine(m, roleIn(m, who, 0));
+		};
+		expect(line(7, 0, A)).toBe('Turn 7 of 30.');
+		expect(line(28, 1, B)).toBe('Turn 28 of 30.');
+		expect(line(29, 0, A)).toBe('Turn 29 of 30: your last turn.');
+		expect(line(29, 0, B)).toBe(
+			'Turn 29 of 30: their last turn. You have one more.',
+		);
+		expect(line(30, 1, B)).toBe(
+			'Turn 30 of 30: your last turn. The match ends with it: fewer hits taken wins.',
+		);
+		expect(line(30, 1, A)).toBe(
+			'Turn 30 of 30: their last turn. The match ends with it: fewer hits taken wins.',
+		);
+		const unlimited = match({maxTurns: 0}, {turn: 99});
+		expect(turnLine(unlimited, roleIn(unlimited, A, 0))).toBe('Turn 99.');
+	});
+
+	it('labels a Remote Charge that would never go off', () => {
+		const can = (turn: number) => {
+			const m = match({}, {turn, actor: 0, acted: turn});
+			return actionsFor(m, roleIn(m, A, 0), at(8));
+		};
+		expect([can(28).remoteCharge, can(28).chargeNeverGoesOff]).toEqual([
+			true,
+			false,
+		]);
+		expect([can(29).remoteCharge, can(29).chargeNeverGoesOff]).toEqual([
+			true,
+			true,
+		]);
+	});
+
+	it('tells each way a match ends, from both sides', () => {
+		const done = (
+			winner: number,
+			hits: [number, number],
+			phase: number,
+			ending?: {winner: number; byTimeout: boolean},
+		) => {
+			const m = match({status: 'Finished', winner}, {hits, phase, turn: 30});
+			return [A, B].map((p) => resultLine(m, roleIn(m, p, 0), ending));
+		};
+		expect(done(0, [0, 2], PHASE.OVER)).toEqual([
+			'You won: two hits.',
+			'You lost: two hits.',
+		]);
+		expect(done(0, [0, 1], PHASE.PLAY, {winner: 0, byTimeout: false})).toEqual([
+			'You won on hits at the turn limit: they took 1, you 0.',
+			'You lost on hits at the turn limit: you took 1, they 0.',
+		]);
+		expect(done(1, [0, 1], PHASE.SHOT, {winner: 1, byTimeout: true})).toEqual([
+			'You lost: you ran out of time.',
+			'You won: they ran out of time.',
+		]);
+		expect(
+			done(NO_WINNER, [1, 1], PHASE.PLAY, {
+				winner: NO_WINNER,
+				byTimeout: false,
+			}),
+		).toEqual([
+			'A tie at the turn limit (1 to 1 hits): both stakes refunded.',
+			'A tie at the turn limit (1 to 1 hits): both stakes refunded.',
+		]);
+		// before the event is read, a win at the limit is still a win
+		expect(done(0, [0, 1], PHASE.PLAY)).toEqual([
+			'You won the pot.',
+			'You lost.',
+		]);
+	});
+
+	it('never reads a draw as a loss', () => {
+		const m = match({status: 'Finished', winner: NO_WINNER});
+		for (const p of [A, B]) {
+			const r = roleIn(m, p, 0);
+			expect([r.drawn, r.won, r.lost]).toEqual([true, false, false]);
+			expect(statusLine(m, r)).toContain('A tie');
+		}
 	});
 });

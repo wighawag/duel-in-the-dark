@@ -1,4 +1,4 @@
-import {readable, type Readable} from 'svelte/store';
+import {readable, writable, type Readable} from 'svelte/store';
 import type {Abi, PublicClient} from 'viem';
 import {
 	ACTION,
@@ -167,31 +167,52 @@ export function sightingOf(
 	return s;
 }
 
+/** How a match ended (its `MatchFinished` event); see view.ts `resultLine`. */
+export type Ending = {winner: number; byTimeout: boolean};
+
 /**
- * The `Acted` events of one match, polled. `watch(undefined)` stops reading.
+ * The `Acted` events of one match, polled, and its `MatchFinished` event once
+ * there is one (`ending`). `watch(undefined)` stops reading.
  */
 export function createHistory(params: {
 	publicClient: PublicClient;
 	contract: () => {address: `0x${string}`; abi: Abi; startBlock?: number};
 	fetchInterval?: number;
-}): Readable<HistoryEntry[]> & {watch(matchId: bigint | undefined): void} {
+}): Readable<HistoryEntry[]> & {
+	watch(matchId: bigint | undefined): void;
+	ending: Readable<Ending | undefined>;
+} {
 	let matchId: bigint | undefined;
+	const ending = writable<Ending | undefined>(undefined);
 	let set: ((v: HistoryEntry[]) => void) | undefined;
 	let generation = 0;
 
 	async function fetchOnce() {
 		const id = matchId;
 		const mine = ++generation;
-		if (id === undefined) return set?.([]);
+		if (id === undefined) {
+			ending.set(undefined);
+			return set?.([]);
+		}
 		const c = params.contract();
-		const logs = await params.publicClient.getContractEvents({
-			address: c.address,
-			abi: c.abi,
-			eventName: 'Acted',
-			args: {matchId: id},
-			fromBlock: BigInt(c.startBlock ?? 0),
-		});
+		const query = (eventName: 'Acted' | 'MatchFinished') =>
+			params.publicClient.getContractEvents({
+				address: c.address,
+				abi: c.abi,
+				eventName,
+				args: {matchId: id},
+				fromBlock: BigInt(c.startBlock ?? 0),
+			});
+		const [logs, finished] = await Promise.all([
+			query('Acted'),
+			query('MatchFinished'),
+		]);
 		if (mine !== generation) return;
+		const f = finished[0] as unknown as
+			{args: {winner: number; byTimeout: boolean}} | undefined;
+		ending.set(
+			f ? {winner: f.args.winner, byTimeout: f.args.byTimeout} : undefined,
+		);
 		const events = logs.map((l) => {
 			const a = (l as unknown as {args: ActedEvent}).args;
 			return {
@@ -220,10 +241,12 @@ export function createHistory(params: {
 	});
 	return {
 		subscribe: store.subscribe,
+		ending,
 		watch(id) {
 			if (id === matchId) return;
 			matchId = id;
 			set?.([]);
+			ending.set(undefined);
 			void fetchOnce().catch(() => {});
 		},
 	};

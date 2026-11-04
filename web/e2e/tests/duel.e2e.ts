@@ -195,10 +195,12 @@ describe('Duel in the Dark', () => {
 		await expect(answer(p)).toBeVisible({timeout: PROVING});
 		await answer(p).click();
 
-		await expect(q.getByText('You won the pot.')).toBeVisible({
+		await expect(q.getByTestId('status')).toHaveText('You won: two hits.', {
 			timeout: PROVING,
 		});
-		await expect(p.getByText('You lost.')).toBeVisible({timeout: PROVING});
+		await expect(p.getByTestId('status')).toHaveText('You lost: two hits.', {
+			timeout: PROVING,
+		});
 
 		await button(q, 'Back to lobby').click();
 		await expect(q.getByText(/Winnings and refunds: 0\.02 ETH/)).toBeVisible({

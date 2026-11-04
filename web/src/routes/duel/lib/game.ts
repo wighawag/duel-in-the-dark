@@ -10,7 +10,7 @@ import type {
 	Transition,
 } from 'duel-in-the-dark-circuits/duel';
 import {createSecretStore, type SecretStore} from './secrets';
-import {createHistory, type HistoryEntry} from './history';
+import {createHistory, type Ending, type HistoryEntry} from './history';
 import {seatOf, type PickMode} from './view';
 import {
 	currentPlayer,
@@ -46,6 +46,8 @@ export type DuelGame = {
 	activity: Readable<Activity>;
 	/** the watched match's history, from its `Acted` events */
 	history: Readable<HistoryEntry[]>;
+	/** how the watched match ended, once it has (its `MatchFinished` event) */
+	ending: Readable<Ending | undefined>;
 	/** which match `history` follows (undefined: none) */
 	watch(matchId: bigint | undefined): void;
 	/** The player's own hidden room in `match`, read from this browser's secrets. */
@@ -229,6 +231,7 @@ export function createDuelGame(
 		view,
 		activity,
 		history,
+		ending: history.ending,
 		watch: (matchId) => history.watch(matchId),
 		myRoom(match, player) {
 			return mySecret(match, player)?.room;

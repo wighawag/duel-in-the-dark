@@ -13,16 +13,18 @@
 		gearLine,
 		pickModeFor,
 		queryOf,
+		resultLine,
 		roleIn,
 		sealedNow,
 		shipView,
 		statusLine,
+		turnLine,
 		type Intent,
 	} from './lib/view';
 	import {describe, sightingLine, sightingOf} from './lib/history';
 
 	const game = createDuelGame(getAppContext());
-	const {view, activity, history} = game;
+	const {view, activity, history, ending} = game;
 
 	let now = $state(Math.floor(Date.now() / 1000));
 	$effect(() => {
@@ -95,7 +97,9 @@
 			are hidden behind a commitment, and every action is proven. Each turn has
 			2 action points: move (1), shoot into a room you can see (2, which gives
 			you away and forces a free move), listen (1), set or set off a trap (1),
-			or use your room's effect. Two hits and you lose.
+			or use your room's effect. Two hits and you lose; if nobody has lost when
+			the turn limit is reached, fewer hits taken wins, and equal hits are a tie
+			that refunds both stakes.
 		</p>
 	</header>
 
@@ -137,8 +141,11 @@
 					{sightingLine(sighting) ?? ''}
 				</p>
 			{/if}
+			{#if selected.status === 'Active'}
+				<p class="text-sm" data-testid="turn">{turnLine(selected, role)}</p>
+			{/if}
 			<p data-testid="status">
-				{statusLine(selected, role)}
+				{statusLine(selected, role, $ending)}
 				{#if selected.status === 'Active'}· {role.secondsLeft}s left{/if}
 			</p>
 
@@ -194,7 +201,10 @@
 							<Button
 								variant={intent === 'charge' ? 'default' : 'outline'}
 								disabled={busy}
-								onclick={() => (intent = 'charge')}>Remote Charge</Button
+								onclick={() => (intent = 'charge')}
+								>Remote Charge{can.chargeNeverGoesOff
+									? ' (your last turn: it would never go off)'
+									: ''}</Button
 							>
 						{/if}
 						{#if can.coolantPurge}
@@ -279,6 +289,9 @@
 					{#each $history as entry, i (i)}
 						<li>{describe(entry, role.seat)}</li>
 					{/each}
+					{#if selected.status === 'Finished'}
+						<li><strong>{resultLine(selected, role, $ending)}</strong></li>
+					{/if}
 				</ol>
 			{/if}
 		</div>

@@ -53,6 +53,8 @@ export type MatchSummary = {
 	winner: number;
 	deadline: number;
 	stake: bigint;
+	/** the deployment's turn limit (0: none); the same for every match */
+	maxTurns: number;
 	seats: readonly {player: `0x${string}`; commitment: `0x${string}`}[];
 	board: BoardState;
 };
@@ -83,10 +85,10 @@ export function createDuelState(params: {
 		async (current) => {
 			const c = deployments.get().contracts.Duel;
 			const player = current?.account;
-			const last = await publicClient.readContract({
-				...c,
-				functionName: 'lastMatchId',
-			});
+			const [last, maxTurns] = await Promise.all([
+				publicClient.readContract({...c, functionName: 'lastMatchId'}),
+				publicClient.readContract({...c, functionName: 'maxTurns'}),
+			]);
 			const ids: bigint[] = [];
 			for (let id = last; id > 0n && ids.length < RECENT; id--) ids.push(id);
 			const matches = await Promise.all(
@@ -112,6 +114,7 @@ export function createDuelState(params: {
 						winner: m.state.winner,
 						deadline: Number(m.state.deadline),
 						stake: m.state.stake,
+						maxTurns,
 						seats: m.seats,
 						board: {
 							...s,

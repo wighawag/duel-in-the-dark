@@ -1,6 +1,6 @@
 # duel-in-the-dark
 
-Alien against human, somewhere on a dark ship. Each player's room, traps and Remote Charge are hidden behind a commitment that nobody, the contract included, can open; every action is proven in zero knowledge, a shot or a room effect gives the player's room away, and whatever asks the other player something (a shot, a listen, a trap going off) is answered with a proof it cannot lie in. Two hits lose, and the winner takes both stakes.
+Alien against human, somewhere on a dark ship. Each player's room, traps and Remote Charge are hidden behind a commitment that nobody, the contract included, can open; every action is proven in zero knowledge, a shot or a room effect gives the player's room away, and whatever asks the other player something (a shot, a listen, a trap going off) is answered with a proof it cannot lie in. Two hits lose, and the winner takes both stakes. A match lasts at most 30 turns, 15 each: if nobody has lost by then, whoever has taken fewer hits wins, and equal hits are a tie that gives both stakes back.
 
 A digital take inspired by the card game *Revolver Noir* (Xavier Davidson, Button Shy), re-themed. The rules here are this game's own; nothing of the card game's text is reproduced.
 
@@ -38,7 +38,7 @@ Rooms 1 to 4 are the upper deck, 5 to 8 the lower. Both tables are directed ("fr
   - Engine Room, *Remote Charge* (1): a hidden charge in any other room, outside the two-trap limit; it goes off by itself at the start of your next turn, before anything else.
 - **End turn** passes what is left.
 
-Every wait has a deadline, after which anyone can end the match against whoever was being waited for (a turn whose Remote Charge is due cannot end until it goes off).
+Every wait has a deadline (the last turn's too), after which anyone can end the match against whoever was being waited for (a turn whose Remote Charge is due cannot end until it goes off).
 
 ## Where the rules live
 
