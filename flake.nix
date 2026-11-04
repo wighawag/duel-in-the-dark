@@ -72,6 +72,14 @@
           };
           default = self.packages.${system}.nargo;
         }
+        # The game packaged for a LAN box (github:wighawag/ethereum-lan-node):
+        # see nix/lan.nix. x86_64-linux only, as the box is.
+        // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+          lan = pkgs.callPackage ./nix/lan.nix {
+            src = self;
+            rev = self.shortRev or self.dirtyShortRev or "unknown";
+          };
+        }
       );
 
       devShells = forAllSystems (
