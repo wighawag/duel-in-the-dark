@@ -9,13 +9,15 @@
  * CLI and a browser prover on two different versions is exactly the mismatch
  * that fails with an unreadable error at proving time.
  *
- * Works in node and in the browser (bb.js picks the right build). In the
+ * Works in node and in the browser (bb.js picks the right build), offline:
+ * the proving setup is committed (crs/), not downloaded. In the
  * browser, run it in a Web Worker: proving blocks for hundreds of milliseconds
  * at least.
  */
 import {Noir, type CompiledCircuit, type InputMap} from '@noir-lang/noir_js';
-import {Barretenberg, UltraHonkBackend, type BackendOptions} from '@aztec/bb.js';
+import {Barretenberg, BackendType, UltraHonkBackend, type BackendOptions} from '@aztec/bb.js';
 import {FIELD_MODULUS} from './field.js';
+import {CRS_G1, CRS_G2} from '../crs/index.js';
 
 export {FIELD_MODULUS, randomField} from './field.js';
 
@@ -50,8 +52,43 @@ export type ZK = {
 	destroy(): Promise<void>;
 };
 
-export async function createZK(options?: BackendOptions): Promise<ZK> {
-	const api = await Barretenberg.new(options);
+/**
+ * The proving setup (CRS) the prover is started with: a prefix of the BN254
+ * G1 points, uncompressed (64 bytes a point), and the G2 point.
+ */
+export type CRS = {g1: Uint8Array; g2: Uint8Array};
+
+function fromBase64(s: string): Uint8Array {
+	return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+}
+
+/** The committed CRS (crs/index.ts): enough for every circuit in this package. */
+export function bundledCRS(): CRS {
+	return {g1: fromBase64(CRS_G1), g2: fromBase64(CRS_G2)};
+}
+
+/**
+ * Start the prover. By default it is given the committed CRS (see
+ * scripts/crs.ts) and so NEVER downloads anything: bb.js would otherwise fetch
+ * 20 MB of points from Aztec's CDN (or, in node, run its native binary, which
+ * downloads into ~/.bb-crs), and a game on a LAN with no internet could not
+ * prove. That runs bb.js's WASM build in node too, which is fast enough for
+ * circuits this size. `crs: false` restores bb.js's own behaviour.
+ */
+export async function createZK(options?: BackendOptions & {crs?: CRS | false}): Promise<ZK> {
+	const {crs = bundledCRS(), ...backend} = options ?? {};
+	const api = await Barretenberg.new(
+		crs
+			? {
+					...backend,
+					backend: typeof window === 'undefined' ? BackendType.Wasm : BackendType.WasmWorker,
+					skipSrsInit: true,
+				}
+			: backend,
+	);
+	if (crs) {
+		await api.srsInitSrs({pointsBuf: crs.g1, numPoints: crs.g1.length / 64, g2Point: crs.g2});
+	}
 	const provers = new Map<CompiledCircuit, Prover>();
 
 	function prover(circuit: CompiledCircuit): Prover {

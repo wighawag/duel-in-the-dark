@@ -41,7 +41,7 @@ for tests: `pnpm test`
 ## Circuits (Noir)
 
 - **`nargo` comes from the devshell: `nix develop` at the root.** It is not on the host PATH and must not be installed globally to work around that, because its version is pinned to match `@noir-lang/noir_js` and `@aztec/bb.js`. Run circuit commands as `nix develop --command pnpm circuits:build`.
-- **Never edit `circuits/generated/` or `contracts/src/verifiers/` by hand.** Change the circuit, then `pnpm circuits:build`, and commit the regenerated files with the circuit change. They are committed so that nothing but a circuit change needs nargo.
+- **Never edit `circuits/generated/`, `circuits/crs/` or `contracts/src/verifiers/` by hand.** Change the circuit, then `pnpm circuits:build`, and commit the regenerated files with the circuit change. They are committed so that nothing but a circuit change needs nargo, and `crs/` so that proving never needs the network.
 - **Bump nargo, noir_js and bb.js together**, never one alone (see "Pinned together" in `README.zk-game.md`), and rerun every suite: circuits, contracts, and the web `client` project, which proves in a real browser.
 - **A commitment computed in TypeScript must match the circuit's.** Both sides pin the same Poseidon2 value in a test (`commitment_is_stable` in Noir, `commits exactly like the circuit does` in TS). Keep that pair in step for every new commitment shape.
 - `README.zk-game.md` explains the pipeline, the shared verifier base and the known constraints. Read it before touching any of the above.

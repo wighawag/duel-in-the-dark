@@ -23,6 +23,7 @@
 		}
 	},
 	"files": [
+		"crs",
 		"dist",
 		"generated",
 		"src"
@@ -43,9 +44,10 @@
 		"---------------------- NEEDS THE DEVSHELL (nix develop) ----------------------": "",
 		"compile": "nargo compile --workspace",
 		"test:circuits": "nargo test --workspace",
-		"build": "pnpm compile && pnpm generate && tsc",
+		"build": "pnpm compile && pnpm crs && pnpm generate && tsc",
 		"---------------------- NO NARGO NEEDED ----------------------": "",
 		"generate": "tsx scripts/generate.ts",
+		"crs": "tsx scripts/crs.ts",
 		"typescript": "tsc",
 		"test": "tsx --test test/*.test.ts",
 		"format": "prettier --write .",
