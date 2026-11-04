@@ -56,7 +56,9 @@ export const config = {
 	// 	},
 	// },
 	// A LAN box (github:wighawag/ethereum-lan-node): its dev chain, which no
-	// public chain list knows. nix/lan.nix deploys for it at build time.
+	// public chain list knows. nix/lan.nix deploys for it at build time, as the
+	// `lan` environment (contracts/scripts/deploy-lan-build.ts). To use the
+	// credits above as well, put the 31337 entry in this same object.
 	chains: {
 		19216801: {
 			info: {

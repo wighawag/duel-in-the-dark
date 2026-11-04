@@ -61,7 +61,7 @@ The contract takes every action through one function, `act(matchId, player, circ
 
 ## On a LAN box, with no internet
 
-`nix build .#lan` packages the game for [ethereum-lan-node](https://github.com/wighawag/ethereum-lan-node): the static site, built for same-host urls (`web/.env.lan`: the chain at `//:8545`, the faucet at `//:34010`, a burner wallet in every browser), and `duel-deploy`, which the box runs to put the contracts on its chain. The build has no network: it compiles with the official solc 0.8.28 (WASM), deploys into a throwaway chain with the box's chain id to learn the addresses (`contracts/scripts/deploy-lan-build.ts`), and every contract goes through the CREATE2 factory the box's genesis predeploys, so the box gets the same ones (`nix/lan-deploy.sh` replays the recorded transactions, skipping any already there). Proving needs nothing from the internet either: the CRS is committed (`circuits/crs`). Add it to a box as `services.ethereumLanNode.games.duel = { package = inputs.duel-in-the-dark.packages.x86_64-linux.lan; webPort = 8002; };`.
+`nix build .#lan` packages the game for [ethereum-lan-node](https://github.com/wighawag/ethereum-lan-node), as "On a LAN box, with no internet" in README.md describes (the package is inherited from the template; this repo only sets `nix/game.nix`). Proving needs nothing from the internet either: the CRS is committed (`circuits/crs`, see README.zk-game.md). Add it to a box as `services.ethereumLanNode.games.duel = { package = inputs.duel-in-the-dark.packages.x86_64-linux.lan; webPort = 8002; };`.
 
 ## Cost
 
