@@ -26,9 +26,13 @@ const config: HardhatUserConfig = {
 		profiles: {
 			default: {
 				version: '0.8.28',
+				// A solc binary to use instead of downloading one: a build with no
+				// network (the Nix package for a LAN box, nix/lan.nix) sets it.
+				path: process.env.SOLC_PATH || undefined,
 			},
 			production: {
 				version: '0.8.28',
+				path: process.env.SOLC_PATH || undefined,
 				settings: {
 					optimizer: {
 						enabled: true,

@@ -67,7 +67,7 @@ describe('an embedded world', () => {
 		const inTab = world.deployments.get();
 		expect(inTab.chain.id).toBe(CHAIN_ID);
 		expect(inTab.chain.id).not.toBe(buildTimeDeployments.chain.id);
-		expect(inTab.contracts[GAME_CONTRACT].address).toMatch(/^0x[0-9a-f]{40}$/);
+		expect(inTab.contracts[GAME_CONTRACT].address).toMatch(/^0x[0-9a-f]{40}$/i);
 
 		// NOT "and a different ADDRESS from the build-time one", which is false
 		// and was asserted here until the first developer ran the stack. This

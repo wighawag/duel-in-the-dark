@@ -55,6 +55,19 @@ export const config = {
 	// 		},
 	// 	},
 	// },
+	// A LAN box (github:wighawag/ethereum-lan-node): its dev chain, which no
+	// public chain list knows. nix/lan.nix deploys for it at build time.
+	chains: {
+		19216801: {
+			info: {
+				id: 19216801,
+				name: 'LAN',
+				nativeCurrency: {name: 'Ether', symbol: 'ETH', decimals: 18},
+				rpcUrls: {default: {http: ['http://ethereum.local:8545']}},
+				testnet: true,
+			},
+		},
+	},
 	data: {},
 	signerProtocols: {
 		privateKey,
