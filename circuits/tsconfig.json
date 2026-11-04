@@ -15,5 +15,5 @@
 		"rootDir": ".",
 		"types": ["node"]
 	},
-	"include": ["src", "generated"]
+	"include": ["src", "generated", "crs"]
 }

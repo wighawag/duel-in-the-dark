@@ -12,6 +12,7 @@ It extends [jolly-roger](https://github.com/wighawag/jolly-roger) (its `integrat
 | `circuits/` | The Noir workspace (one member per circuit) and the TypeScript prover. |
 | `circuits/scripts/generate.ts` | Turns compiled circuits into prover artifacts and Solidity verifiers. |
 | `circuits/generated/` | Committed circuit artifacts, imported by the web and the tests. |
+| `circuits/crs/` | The committed proving setup: just the points the circuits need (see Known constraints). |
 | `contracts/src/verifiers/` | Committed, generated verifiers: one per circuit plus a shared base. |
 | `contracts/deploy/000_deploy_verifiers.ts` | Deploys the shared libraries once and one verifier per circuit. |
 | `contracts/src/zk-game/ZKMatches.sol` | The match framework every game inherits (see below). |
@@ -29,7 +30,9 @@ circuits/<name>/src/main.nr
    │  nargo compile --workspace            (devshell)
    ▼
 circuits/target/<name>.json
+   │  pnpm --filter ./circuits crs          (first; downloads only when a circuit outgrew the points)
    │  pnpm --filter ./circuits generate     (no nargo needed)
+   ├─► circuits/crs/index.ts                 the CRS points every circuit needs
    ├─► circuits/generated/<name>.json        prover artifact, imported by web + tests
    ├─► contracts/src/verifiers/<Name>Verifier.sol
    └─► contracts/src/verifiers/HonkVerifierBase.sol
@@ -63,7 +66,7 @@ On the web, a player's secrets (value and salt behind each commitment) live only
 ## Known constraints
 
 - **Verifier size.** A verifier is about 24.1 KB unoptimized (the default profile, used by tests) and 19.5 KB with the production profile, against the 24 KB (24,576 bytes) limit. It is mostly fixed code, so more circuits do not grow it much, but it is close to the limit.
-- **The proving setup (CRS) comes from Aztec's CDN.** bb.js downloads the points a circuit needs (32 bytes per gate, about 130 KB for the demo circuit) from `crs.aztec-cdn.foundation`, falling back to `crs.aztec-labs.com`, and the browser build has no option to self-host them. A deployment that must not depend on a third party has to solve this, for example by caching them in the service worker.
+- **The proving setup (CRS) is committed, so proving never touches the network.** Left alone, bb.js 5.3 downloads 2^19 G1 points (16 MB) and 4 MB of Grumpkin points from Aztec's CDN when a prover starts, whatever the circuit, and in node its native binary downloads into `~/.bb-crs`. UltraHonk needs only as many G1 points as the largest circuit's dyadic size, plus the G2 point, so `circuits/crs/index.ts` holds exactly those (4096 points, 256 KB, for this template's circuits) and `createZK` hands them to bb.js's WASM build, in node too. `pnpm --filter ./circuits crs` regenerates it, and `pnpm circuits:build` runs it before `generate`; it downloads only when a circuit outgrows the committed points, so that is the one step that needs the internet. A game served from a LAN box with no uplink therefore proves exactly as one served from the internet.
 - **Single-threaded proving on static hosting.** Multi-threaded proving needs cross-origin isolation (COOP/COEP headers), which static and IPFS hosting cannot set. bb.js then proves single-threaded, which is slower but works: the browser test proves exactly that way.
 
 - **Every proven action costs about 3.5 to 4 million gas** (the UltraHonk ZK verifier; a plain action is ~65k). Zero knowledge cannot be dropped, since it is what hides the state, so these games belong on an L2 or a cheap chain, and the signer's credits must be sized per proof.
