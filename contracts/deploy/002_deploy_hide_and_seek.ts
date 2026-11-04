@@ -43,7 +43,10 @@ export default deployScript(
 					responseDuration: RESPONSE_DURATION,
 					maxTurns: MAX_TURNS,
 				},
-				deterministicImplementation: true,
+				// The proxy too, not only the implementation: every address must
+				// depend on the init code alone ("Deterministic deployments" in
+				// README.md), or a LAN box's package would point at nothing.
+				deterministic: true,
 			},
 		);
 	},

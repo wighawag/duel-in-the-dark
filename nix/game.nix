@@ -15,7 +15,11 @@
   # the template, a descendant's stale hash quietly gets the TEMPLATE's
   # packages. Two lockfiles can also name the same packages, and so share a
   # hash.
-  pnpmDepsHash = "sha256-SH8gXQ67CBHUouxg9RoUhYkCWF+lGzturum8v9iFBq0=";
+  pnpmDepsHash = "sha256-61df33KmV7ThoFks+DSZsGR0Sfxs5bSQiLDYZZdbAeI=";
+
+  # The prover's JS (circuits/dist), which the contracts' deploy (the
+  # verifiers) and the web app import.
+  preBuild = "pnpm --filter ./circuits exec tsc";
 
   # Optional, shown with their defaults:
   #
@@ -24,5 +28,6 @@
   # description = <web/src/web-config.json's "description">;
   # deployBin = "<name>-deploy";               what the box runs to deploy
   # preBuild = "";   shell, run from the repo root before the contracts are
-  #                  compiled (what they or the web app need built first)
+  #                  compiled (what they or the web app need built first):
+  #                  set above
 }
