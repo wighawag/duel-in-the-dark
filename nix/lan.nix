@@ -34,6 +34,7 @@
   fetchPnpmDeps,
   pnpmConfigHook,
   writeShellApplication,
+  runCommand,
   foundry,
   jq,
 }: let
@@ -47,6 +48,13 @@
     url = "https://binaries.soliditylang.org/wasm/soljson-v0.8.28+commit.7893614a.js";
     hash = "sha256-cu9YCm7FlDEwAo5SlDE/JOlDVSCsyJ+Mnb/QE52a4UY=";
   };
+
+  # The deploy needs `cast` alone: copied out of foundry, it is 90 MB instead
+  # of foundry's 370 (forge, anvil, chisel...), which matters when the closure
+  # is copied to the box over an event's network.
+  cast = runCommand "cast-${foundry.version}" {} ''
+    install -Dm755 ${foundry}/bin/cast $out/bin/cast
+  '';
 
   /** The box's chain id: ethereum-lan-node's nix/genesis.json. */
   chainId = 19216801;
@@ -108,7 +116,7 @@ in
     installPhase = let
       deploy = writeShellApplication {
         name = "duel-deploy";
-        runtimeInputs = [foundry jq];
+        runtimeInputs = [cast jq];
         text = builtins.readFile ./lan-deploy.sh;
       };
     in ''
