@@ -6,8 +6,9 @@ import {deployScript, artifacts} from '../rocketh/deploy.js';
 const TURN_DURATION = 10 * 60;
 /** How long a player has to answer a query, in seconds. */
 const RESPONSE_DURATION = 5 * 60;
-/** How many turns a match lasts at most; 0 for no limit. */
-const MAX_TURNS = 0;
+/** How many turns a match lasts at most (even, so 15 each; see
+ * work/specs/proposed/milestone-e-turn-limit.md for why 30). */
+const MAX_TURNS = 30;
 
 export default deployScript(
 	async (env) => {

@@ -22,7 +22,9 @@ import {Proxied} from "@rocketh/proxy/solc_0_8/ERC1967/Proxied.sol";
 ///
 /// It knows two facts about the state, both public: a phase from `QUERY` up is
 /// answered by the other seat, and a turn holder whose Remote Charge is due
-/// may not end the turn ({_turnMayEnd}).
+/// may not end the turn ({_turnMayEnd}). And one outcome: a match that
+/// reaches `maxTurns` is won by whoever has taken fewer hits, and is a draw on
+/// equal hits ({_outcomeAtTurnLimit}).
 ///
 /// The verifier's public inputs are `[state, next]`, each the 16 fields of
 /// {State} in declaration order (see `_stateInputs`).
@@ -109,6 +111,9 @@ contract Duel is ZKMatches, Proxied {
     IZKVerifier public immutable effectVerifier;
     IZKVerifier public immutable answerVerifier;
 
+    /// @notice how many turns a match lasts at most (even: as many each)
+    uint24 public immutable maxTurns;
+
     mapping(uint256 matchId => Board) internal _boards;
 
     constructor(
@@ -119,8 +124,10 @@ contract Duel is ZKMatches, Proxied {
         IZKVerifier effectVerifier_,
         IZKVerifier answerVerifier_,
         uint64 turnDuration_,
-        uint64 responseDuration_
+        uint64 responseDuration_,
+        uint24 maxTurns_
     ) ZKMatches(turnDuration_, responseDuration_) {
+        maxTurns = maxTurns_;
         startVerifier = startVerifier_;
         moveVerifier = moveVerifier_;
         shootVerifier = shootVerifier_;
@@ -271,6 +278,19 @@ contract Duel is ZKMatches, Proxied {
         Match storage m = _matches[matchId];
         bool chargeDue = (b.armed >> m.turnSeat) & 1 == 1 && b.acted != m.turn;
         return b.phase == PLAY && !chargeDue;
+    }
+
+    function _turnLimit(uint256) internal view override returns (uint24) {
+        return maxTurns;
+    }
+
+    /// @notice At the turn limit, fewer hits taken wins; equal hits draw.
+    function _outcomeAtTurnLimit(
+        uint256 matchId
+    ) internal view override returns (uint8) {
+        uint8[2] storage hits = _boards[matchId].hits;
+        if (hits[0] == hits[1]) return NO_WINNER;
+        return hits[0] < hits[1] ? 0 : 1;
     }
 
     // ------------------------------------------------------------------------

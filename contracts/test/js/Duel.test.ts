@@ -780,4 +780,127 @@ describe('Duel', function () {
 		// and the contract accepts the untampered proof
 		await m.send(m.turn, t);
 	});
+
+	// --- the turn limit -----------------------------------------------------
+
+	describe('the turn limit', function () {
+		const MAX_TURNS = 30;
+		const NO_WINNER = 255;
+
+		/** Turn `t` belongs to the first player when odd, the second when even. */
+		const holder = (m: M, t: number) => (t % 2 === 1 ? m.turn : m.other);
+		/** End turns `from`..`to` with nothing played in them. */
+		async function endTurns(m: M, from: number, to: number) {
+			for (let t = from; t <= to; t++) await m.endTurn(holder(m, t));
+		}
+		async function balances(m: M) {
+			return Promise.all(
+				m.players.map((p) =>
+					m.env.read(m.Duel, {functionName: 'balanceOf', args: [p]}),
+				),
+			);
+		}
+
+		it('is 30 turns, and ends a match nobody was hit in as a tie: both stakes back', async function () {
+			const m = await matchWith(1, 8);
+			expect(await m.env.read(m.Duel, {functionName: 'maxTurns'})).toEqual(
+				MAX_TURNS,
+			);
+			await endTurns(m, 1, MAX_TURNS - 1);
+			expect((await m.match()).status).toEqual(2); // still Active
+			record(
+				'endTurn, the last (turn limit)',
+				await m.env.execute(m.Duel, {
+					functionName: 'endTurn',
+					args: [m.matchId, m.players[m.other]],
+					account: m.players[m.other],
+				}),
+			);
+			const s = await m.match();
+			expect([s.status, s.winner, s.turn]).toEqual([3, NO_WINNER, MAX_TURNS]);
+			expect(await balances(m)).toEqual([STAKE, STAKE]);
+			for (const p of m.players)
+				await m.env.execute(m.Duel, {functionName: 'withdraw', account: p});
+			expect(await balances(m)).toEqual([0n, 0n]);
+			// Nothing more can be played.
+			await expect(m.endTurn(m.turn)).toBeRejectedWith('NotActive');
+			const late = await duel.move(
+				{...(await m.state()), ap: 2},
+				m.secrets[m.other],
+				7,
+			);
+			await expect(m.send(m.other, late)).toBeRejectedWith('NotActive');
+		});
+
+		it('gives the pot to whoever was hit less', async function () {
+			const m = await matchWith(4, 7);
+			await m.shoot(m.turn, 7);
+			await m.answer(m.other); // hit: 1 to 0
+			await m.move(m.turn, 2); // the free move ends turn 1
+			await endTurns(m, 2, MAX_TURNS);
+			const s = await m.match();
+			expect([s.status, s.winner]).toEqual([3, m.turn]);
+			const pot = await balances(m);
+			expect([pot[m.turn], pot[m.other]]).toEqual([STAKE * 2n, 0n]);
+		});
+
+		it('is a tie on equal hits, 1 to 1', async function () {
+			const m = await matchWith(4, 7);
+			await m.shoot(m.turn, 7);
+			await m.answer(m.other);
+			await m.move(m.turn, 7); // into the other's room, unseen
+			await m.shoot(m.other, 7);
+			await m.answer(m.turn);
+			await m.move(m.other, 8);
+			expect((await m.state()).hits).toEqual([1, 1]);
+			await endTurns(m, 3, MAX_TURNS);
+			const s = await m.match();
+			expect([s.status, s.winner]).toEqual([3, NO_WINNER]);
+			expect(await balances(m)).toEqual([STAKE, STAKE]);
+		});
+
+		it('waits, on the last turn, for the answer and the free move, then ends on hits', async function () {
+			const m = await matchWith(7, 4);
+			await endTurns(m, 1, MAX_TURNS - 1);
+			await m.shoot(m.other, 7); // the Gantry sees the Cargo Hold
+			await m.answer(m.turn); // hit: 0 to 1
+			expect((await m.match()).status).toEqual(2); // the free move is owed
+			await m.play(m.other, 'move (forced, turn limit)', (s, x) =>
+				duel.move(s, x, 2),
+			);
+			const s = await m.match();
+			expect([s.status, s.winner, s.turn]).toEqual([3, m.other, MAX_TURNS]);
+			expect((await m.state()).phase).toEqual(PHASE.PLAY);
+		});
+
+		it('lets a second hit on the last turn win outright', async function () {
+			const m = await matchWith(7, 4);
+			await m.endTurn(m.turn);
+			await m.shoot(m.other, 7);
+			await m.answer(m.turn); // 0 to 1
+			await m.move(m.other, 2);
+			await m.endTurn(m.turn); // turn 3
+			await m.move(m.other, 4); // turn 4: back to the Gantry
+			await m.endTurn(m.other);
+			await endTurns(m, 5, MAX_TURNS - 1);
+			await m.shoot(m.other, 7);
+			await m.answer(m.turn);
+			expect((await m.state()).phase).toEqual(PHASE.OVER);
+			const s = await m.match();
+			expect([s.status, s.winner]).toEqual([3, m.other]);
+		});
+
+		it('still times out a responder who stalls on the last turn, even when ahead', async function () {
+			const m = await matchWith(4, 7);
+			await m.shoot(m.turn, 7);
+			await m.answer(m.other); // 1 to 0 for the first player
+			await m.move(m.turn, 2);
+			await endTurns(m, 2, MAX_TURNS - 1);
+			await m.shoot(m.other, 6); // a shot the leader does not answer
+			await networkHelpers.time.increase(RESPONSE + 1);
+			await m.claimTimeout(m.other);
+			const s = await m.match();
+			expect([s.status, s.winner]).toEqual([3, m.other]);
+		});
+	});
 });
