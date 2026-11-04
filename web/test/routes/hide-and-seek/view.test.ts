@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {roleIn} from '../../../src/routes/hide-and-seek/lib/view';
+import {roleIn, NO_WINNER} from '../../../src/routes/hide-and-seek/lib/view';
 import {createSecretStore} from '../../../src/routes/hide-and-seek/lib/secrets';
 import type {MatchSummary} from '../../../src/routes/hide-and-seek/lib/game';
 
@@ -68,6 +68,16 @@ describe('roleIn', () => {
 		expect(roleIn(done, B, 0).won).toBe(true);
 		expect(roleIn(done, A, 0).lost).toBe(true);
 		expect(roleIn(done, C, 0).lost).toBe(false);
+	});
+
+	it('tells a draw from a loss', () => {
+		const drawn = match({status: 'Finished', winner: NO_WINNER});
+		for (const p of [A, B])
+			expect([
+				roleIn(drawn, p, 0).drawn,
+				roleIn(drawn, p, 0).won,
+				roleIn(drawn, p, 0).lost,
+			]).toEqual([true, false, false]);
 	});
 });
 

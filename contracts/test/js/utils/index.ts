@@ -1,10 +1,13 @@
 import {Abi_InRangeVerifier} from '../../../generated/abis/InRangeVerifier.js';
 import {Abi_HideAndSeek} from '../../../generated/abis/HideAndSeek.js';
-import {loadAndExecuteDeploymentsFromFiles} from '../../../rocketh/environment.js';
+import {
+	artifacts,
+	loadAndExecuteDeploymentsFromFiles,
+} from '../../../rocketh/environment.js';
 import {EthereumProvider} from 'hardhat/types/providers';
 
 export function setupFixtures(provider: EthereumProvider) {
-	return {
+	const fixtures = {
 		async deployAll() {
 			const env = await loadAndExecuteDeploymentsFromFiles({
 				provider: provider,
@@ -24,5 +27,34 @@ export function setupFixtures(provider: EthereumProvider) {
 				unnamedAccounts: env.unnamedAccounts,
 			};
 		},
+
+		/**
+		 * Everything, plus a second HideAndSeek limited to `LIMITED_TURNS`
+		 * turns (the app's deploys none), in place of the first.
+		 */
+		async deployLimited() {
+			const all = await fixtures.deployAll();
+			const {env} = all;
+			const first = all.HideAndSeek;
+			const read = (functionName: 'inRangeVerifier' | 'moveVerifier' | 'answerVerifier' | 'turnDuration' | 'responseDuration') =>
+				env.read(first, {functionName});
+			const HideAndSeek = (await env.deploy('LimitedHideAndSeek', {
+				account: env.namedAccounts.deployer,
+				artifact: artifacts.HideAndSeek,
+				args: [
+					await read('inRangeVerifier'),
+					await read('moveVerifier'),
+					await read('answerVerifier'),
+					await read('turnDuration'),
+					await read('responseDuration'),
+					LIMITED_TURNS,
+				],
+			})) as unknown as typeof first;
+			return {...all, HideAndSeek};
+		},
 	};
+	return fixtures;
 }
+
+/** The turn limit of `deployLimited`'s HideAndSeek. */
+export const LIMITED_TURNS = 4;

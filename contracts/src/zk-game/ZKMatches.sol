@@ -18,6 +18,10 @@ import {IZKVerifier} from "./IZKVerifier.sol";
 /// {_spendActionPoints}, {_openQuery}, {_answered}, {_finish}), and ends with
 /// {_settle}, which passes the turn once nothing is left to do in it.
 ///
+/// A TURN LIMIT is optional ({_turnLimit}, none by default): when the last
+/// turn ends, the game's {_outcomeAtTurnLimit} names the winner from public
+/// state, or a draw, which gives each seat its own stake back.
+///
 /// THE PUBLIC INPUTS ARE NEVER TAKEN FROM THE CALLER. A proof is only as good
 /// as the statement it is checked against: a game that let a player submit the
 /// commitment their proof refers to would let them prove things about a state
@@ -47,6 +51,10 @@ abstract contract ZKMatches is UsingDelegation {
 
     uint8 internal constant SEATS = 2;
 
+    /// @notice `Match.winner` of a draw: nobody won, each seat got its own
+    ///         stake back.
+    uint8 internal constant NO_WINNER = type(uint8).max;
+
     /// @notice BN254 scalar field modulus: a commitment is a field element.
     uint256 internal constant FIELD_MODULUS =
         0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001;
@@ -67,7 +75,7 @@ abstract contract ZKMatches is UsingDelegation {
         uint8 actionPoints;
         /// @notice seats that owe an answer to the open query (bit i = seat i)
         uint8 awaiting;
-        /// @notice the winning seat, when Finished
+        /// @notice the winning seat, when Finished; NO_WINNER for a draw
         uint8 winner;
         /// @notice the number of the current turn: 0 until the match starts,
         ///         then 1, 2, 3... A game reads it to state anything tied to
@@ -78,7 +86,8 @@ abstract contract ZKMatches is UsingDelegation {
         uint24 turn;
         /// @notice when whoever is being waited for must have acted
         uint64 deadline;
-        /// @notice what each seat put at stake; the winner takes all
+        /// @notice what each seat put at stake; the winner takes all, a draw
+        ///         gives each seat its own back
         uint128 stake;
     }
 
@@ -121,6 +130,7 @@ abstract contract ZKMatches is UsingDelegation {
         uint8 seat,
         bytes32 commitment
     );
+    /// @notice `winner` is NO_WINNER and `player` the zero address for a draw
     event MatchFinished(
         uint256 indexed matchId,
         uint8 winner,
@@ -319,6 +329,24 @@ abstract contract ZKMatches is UsingDelegation {
         return true;
     }
 
+    /// @notice How many turns `matchId` lasts at most; 0, the default, for no
+    ///         limit. When the last turn ends (the moment the next one would
+    ///         start), the match ends with {_outcomeAtTurnLimit}. Everything
+    ///         that holds a turn open still holds the last one: a query is
+    ///         answered, {_turnMayEnd} is waited for, and a timeout in it
+    ///         falls on whoever was being waited for, as in any other turn.
+    function _turnLimit(uint256) internal view virtual returns (uint24) {
+        return 0;
+    }
+
+    /// @notice Who wins a match that reached its turn limit, from public
+    ///         state only; NO_WINNER, the default, for a draw.
+    function _outcomeAtTurnLimit(
+        uint256
+    ) internal view virtual returns (uint8 winner) {
+        return NO_WINNER;
+    }
+
     /// @notice Which seat plays first. Defaults to a coin flip on
     ///         `block.prevrandao`, which a block proposer could bias by one bit;
     ///         acceptable for who-goes-first, not for anything with a payout.
@@ -438,14 +466,22 @@ abstract contract ZKMatches is UsingDelegation {
         emit CommitmentUpdated(matchId, seat, commitment);
     }
 
-    /// @notice End the match and credit the whole pot to `winner`.
+    /// @notice End the match and credit the whole pot to `winner`, or, for
+    ///         `NO_WINNER` (a draw), each seat its own stake.
     function _finish(uint256 matchId, uint8 winner, bool byTimeout) internal {
         Match storage m = _matches[matchId];
         m.status = Status.Finished;
         m.winner = winner;
         m.awaiting = 0;
-        address player = _seats[matchId][winner].player;
-        balanceOf[player] += uint256(m.stake) * SEATS;
+        address player;
+        if (winner == NO_WINNER) {
+            for (uint8 i = 0; i < SEATS; i++) {
+                balanceOf[_seats[matchId][i].player] += m.stake;
+            }
+        } else {
+            player = _seats[matchId][winner].player;
+            balanceOf[player] += uint256(m.stake) * SEATS;
+        }
         emit MatchFinished(matchId, winner, player, byTimeout);
     }
 
@@ -460,7 +496,7 @@ abstract contract ZKMatches is UsingDelegation {
             m.actionPoints == 0 &&
             _turnMayEnd(matchId)
         ) {
-            _startTurn(matchId, _otherSeat(m.turnSeat));
+            _nextTurn(matchId);
         }
     }
 
@@ -484,6 +520,18 @@ abstract contract ZKMatches is UsingDelegation {
     // ------------------------------------------------------------------------
     // INTERNALS
     // ------------------------------------------------------------------------
+
+    /// @notice The current turn is over: start the other seat's, unless it
+    ///         was the last one ({_turnLimit}), which ends the match.
+    function _nextTurn(uint256 matchId) private {
+        Match storage m = _matches[matchId];
+        uint24 limit = _turnLimit(matchId);
+        if (limit != 0 && m.turn >= limit) {
+            _finish(matchId, _outcomeAtTurnLimit(matchId), false);
+        } else {
+            _startTurn(matchId, _otherSeat(m.turnSeat));
+        }
+    }
 
     function _startTurn(uint256 matchId, uint8 seat) private {
         Match storage m = _matches[matchId];

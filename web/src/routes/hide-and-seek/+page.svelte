@@ -193,9 +193,11 @@
 				<p>
 					{role.won
 						? 'You won the pot.'
-						: role.lost
-							? 'You lost.'
-							: `Seat ${selected.winner} won.`}
+						: role.drawn
+							? 'A draw: each stake was refunded.'
+							: role.lost
+								? 'You lost.'
+								: `Seat ${selected.winner} won.`}
 				</p>
 			{/if}
 		</div>

@@ -7,6 +7,8 @@ import {deployScript, artifacts} from '../rocketh/deploy.js';
 const TURN_DURATION = 10 * 60;
 /** How long a player has to answer a query, in seconds. */
 const RESPONSE_DURATION = 5 * 60;
+/** How many turns a match lasts at most; 0 for no limit. */
+const MAX_TURNS = 0;
 
 export default deployScript(
 	async (env) => {
@@ -29,6 +31,7 @@ export default deployScript(
 					verifiers.answer,
 					BigInt(TURN_DURATION),
 					BigInt(RESPONSE_DURATION),
+					MAX_TURNS,
 				],
 			},
 			{
@@ -38,6 +41,7 @@ export default deployScript(
 					actionPoints: 2,
 					turnDuration: TURN_DURATION,
 					responseDuration: RESPONSE_DURATION,
+					maxTurns: MAX_TURNS,
 				},
 				deterministicImplementation: true,
 			},

@@ -5,6 +5,9 @@ import type {MatchSummary} from './game';
  * worked out here so that the component only renders. Pure: the same match,
  * player and time always give the same answer.
  */
+/** `winner` of a draw (ZKMatches' NO_WINNER). */
+export const NO_WINNER = 255;
+
 export type MatchRole = {
 	seat: number | undefined;
 	/** an open match this player could join */
@@ -20,6 +23,8 @@ export type MatchRole = {
 	timedOut: boolean;
 	won: boolean;
 	lost: boolean;
+	/** finished with no winner (the turn limit): each stake refunded */
+	drawn: boolean;
 	secondsLeft: number;
 };
 
@@ -38,6 +43,7 @@ export function roleIn(
 	const awaitingMe = mine !== undefined && (match.awaiting & (1 << mine)) !== 0;
 	const myTurn = active && mine === match.turnSeat && match.awaiting === 0;
 	const timedOut = active && nowSeconds > match.deadline;
+	const drawn = match.status === 'Finished' && match.winner === NO_WINNER;
 	return {
 		seat: mine,
 		canJoin:
@@ -50,8 +56,10 @@ export function roleIn(
 		won: match.status === 'Finished' && mine === match.winner,
 		lost:
 			match.status === 'Finished' &&
+			!drawn &&
 			mine !== undefined &&
 			mine !== match.winner,
+		drawn,
 		secondsLeft: Math.max(0, match.deadline - nowSeconds),
 	};
 }

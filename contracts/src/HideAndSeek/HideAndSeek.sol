@@ -15,7 +15,9 @@ import {Proxied} from "@rocketh/proxy/solc_0_8/ERC1967/Proxied.sol";
 /// - `guess` (1 AP): name a cell. That opens a QUERY: the opponent must answer
 ///   with a proof of whether they are there, before the turn can go on.
 /// The first correct guess takes both stakes. Not answering, or not acting,
-/// before the deadline loses the same way.
+/// before the deadline loses the same way. A deployment may limit the number
+/// of turns (`maxTurns`, 0 for none): nobody found by then is a draw, and
+/// each player gets their stake back.
 ///
 /// The three circuits (circuits/in_range, move_on_ring, answer_guess) each
 /// have a generated verifier; their public inputs are listed in the order
@@ -43,6 +45,9 @@ contract HideAndSeek is ZKMatches, Proxied {
     /// @notice answer_guess(commitment, guess, hit): the truthful answer
     IZKVerifier public immutable answerVerifier;
 
+    /// @notice how many turns a match lasts at most; 0 for no limit
+    uint24 public immutable maxTurns;
+
     /// @notice the cell named by the open guess of each match
     mapping(uint256 matchId => uint8 cell) public pendingGuess;
 
@@ -51,11 +56,13 @@ contract HideAndSeek is ZKMatches, Proxied {
         IZKVerifier moveVerifier_,
         IZKVerifier answerVerifier_,
         uint64 turnDuration_,
-        uint64 responseDuration_
+        uint64 responseDuration_,
+        uint24 maxTurns_
     ) ZKMatches(turnDuration_, responseDuration_) {
         inRangeVerifier = inRangeVerifier_;
         moveVerifier = moveVerifier_;
         answerVerifier = answerVerifier_;
+        maxTurns = maxTurns_;
     }
 
     // ------------------------------------------------------------------------
@@ -136,5 +143,10 @@ contract HideAndSeek is ZKMatches, Proxied {
         uint8
     ) internal pure override returns (uint8) {
         return ACTION_POINTS;
+    }
+
+    /// @notice The outcome at the limit is the default: a draw.
+    function _turnLimit(uint256) internal view override returns (uint24) {
+        return maxTurns;
     }
 }

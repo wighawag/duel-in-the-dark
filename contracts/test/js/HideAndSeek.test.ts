@@ -9,14 +9,14 @@ import {
 	type HideAndSeek,
 	type HideAndSeekSecret,
 } from 'template-zk-game-circuits/hide-and-seek';
-import {setupFixtures} from './utils/index.js';
+import {setupFixtures, LIMITED_TURNS} from './utils/index.js';
 
 // Whole matches with real proofs, through the deploy scripts the app uses.
 // The framework (ZKMatches) is tested through the reference game: what it
 // promises is only observable through a game's actions.
 
 const {provider, networkHelpers} = await network.connect();
-const {deployAll} = setupFixtures(provider);
+const {deployAll, deployLimited} = setupFixtures(provider);
 
 const STAKE = parseEther('1');
 
@@ -32,8 +32,11 @@ after(async () => {
 });
 
 /** A started match between two unnamed accounts, each hidden in its cell. */
-async function startedMatch(cells: [number, number] = [2, 6]) {
-	const fixture = await networkHelpers.loadFixture(deployAll);
+async function startedMatch(
+	cells: [number, number] = [2, 6],
+	deploy: typeof deployAll = deployAll,
+) {
+	const fixture = await networkHelpers.loadFixture(deploy);
 	const {env, HideAndSeek, unnamedAccounts} = fixture;
 	const players = [unnamedAccounts[0], unnamedAccounts[1]] as const;
 	const secrets: HideAndSeekSecret[] = [];
@@ -70,6 +73,19 @@ async function startedMatch(cells: [number, number] = [2, 6]) {
 		/** seat whose turn it is, and the other one */
 		turn,
 		other: turn === 0 ? 1 : 0,
+		async endTurn(seat: number) {
+			await env.execute(HideAndSeek, {
+				functionName: 'endTurn',
+				args: [matchId, players[seat]],
+				account: players[seat],
+			});
+		},
+		async balance(seat: number) {
+			return env.read(HideAndSeek, {
+				functionName: 'balanceOf',
+				args: [players[seat]],
+			});
+		},
 		async state() {
 			return (
 				await env.read(HideAndSeek, {functionName: 'getMatch', args: [matchId]})
@@ -366,5 +382,107 @@ describe('HideAndSeek', function () {
 		expect(
 			await env.read(HideAndSeek, {functionName: 'balanceOf', args: [creator]}),
 		).toEqual(STAKE);
+	});
+
+	describe('the turn limit', function () {
+		/** End turns 1.. `upTo` in order (turn 1 is the turn holder's). */
+		async function endTurns(m: Awaited<ReturnType<typeof startedMatch>>, upTo: number) {
+			for (let t = 1; t <= upTo; t++) await m.endTurn(t % 2 === 1 ? m.turn : m.other);
+		}
+
+		it('is off by default: a match plays past turn 40 as before', async function () {
+			const m = await startedMatch();
+			expect(
+				await m.env.read(m.HideAndSeek, {functionName: 'maxTurns'}),
+			).toEqual(0);
+			await endTurns(m, 40);
+			const s = await m.state();
+			expect([s.status, s.turn, s.turnSeat, s.actionPoints]).toEqual([
+				2,
+				41,
+				m.turn,
+				2,
+			]);
+		});
+
+		it('ends in a draw when the last turn ends, refunding each stake', async function () {
+			const m = await startedMatch([2, 6], deployLimited);
+			await endTurns(m, LIMITED_TURNS - 1);
+			expect((await m.state()).status).toEqual(2); // still Active
+			await m.endTurn(m.other); // turn 4, the last
+			const s = await m.state();
+			expect([s.status, s.winner, s.turn, s.awaiting]).toEqual([
+				3, // Finished
+				255, // NO_WINNER
+				LIMITED_TURNS,
+				0,
+			]);
+			expect([await m.balance(0), await m.balance(1)]).toEqual([STAKE, STAKE]);
+			for (const seat of [0, 1]) {
+				await m.env.execute(m.HideAndSeek, {
+					functionName: 'withdraw',
+					account: m.players[seat],
+				});
+				expect(await m.balance(seat)).toEqual(0n);
+			}
+			await expect(m.endTurn(m.turn)).toBeRejectedWith('NotActive');
+		});
+
+		it('waits for the answer to a guess in the last turn, then draws', async function () {
+			const m = await startedMatch([2, 6], deployLimited);
+			await endTurns(m, LIMITED_TURNS - 1);
+			const {env, HideAndSeek, matchId, players, secrets, other, turn} = m;
+			const cell = (secrets[turn].cell + 1) % 8;
+			await env.execute(HideAndSeek, {
+				functionName: 'guess',
+				args: [matchId, players[other], cell],
+				account: players[other],
+			});
+			const miss = await game.answer(secrets[turn], cell);
+			await env.execute(HideAndSeek, {
+				functionName: 'answerGuess',
+				args: [matchId, players[turn], miss.hit, miss.proof.proof],
+				account: players[turn],
+			});
+			// One action point left: the last turn is not over yet.
+			let s = await m.state();
+			expect([s.status, s.actionPoints]).toEqual([2, 1]);
+			await m.endTurn(other);
+			s = await m.state();
+			expect([s.status, s.winner]).toEqual([3, 255]);
+		});
+
+		it('still lets a hit in the last turn win outright', async function () {
+			const m = await startedMatch([2, 6], deployLimited);
+			await endTurns(m, LIMITED_TURNS - 1);
+			const {env, HideAndSeek, matchId, players, secrets, other, turn} = m;
+			await env.execute(HideAndSeek, {
+				functionName: 'guess',
+				args: [matchId, players[other], secrets[turn].cell],
+				account: players[other],
+			});
+			const hit = await game.answer(secrets[turn], secrets[turn].cell);
+			await env.execute(HideAndSeek, {
+				functionName: 'answerGuess',
+				args: [matchId, players[turn], hit.hit, hit.proof.proof],
+				account: players[turn],
+			});
+			const s = await m.state();
+			expect([s.status, s.winner]).toEqual([3, other]);
+			expect(await m.balance(other)).toEqual(STAKE * 2n);
+		});
+
+		it('still times out a turn holder who stalls in the last turn', async function () {
+			const m = await startedMatch([2, 6], deployLimited);
+			await endTurns(m, LIMITED_TURNS - 1);
+			await networkHelpers.time.increase(10 * 60 + 1);
+			await m.env.execute(m.HideAndSeek, {
+				functionName: 'claimTimeout',
+				args: [m.matchId],
+				account: m.players[m.turn],
+			});
+			const s = await m.state();
+			expect([s.status, s.winner]).toEqual([3, m.turn]);
+		});
 	});
 });
