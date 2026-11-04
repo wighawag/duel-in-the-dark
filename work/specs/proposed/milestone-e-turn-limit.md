@@ -10,6 +10,8 @@ touches: branch `turn-limit` (contracts/, web/, README.duel.md), and template-zk
 
 # Spec: a match lasts at most 30 turns
 
+Built on branch `turn-limit` (2026-11-03) as specified: the generic part landed in template-zk-game `main` (a8522094) and was merged down. Duel is 24,359 of 24,576 bytes unoptimised, so no optimiser was needed. Differences: the template's HideAndSeek page also tells a draw from a loss (a `drawn` flag); the inherited `endTurn` reaching the limit costs about 95k gas for a draw (two refunds), see work/notes/findings/gas-per-duel-action.md. The duel e2e only changed its final assertions ("You won: two hits.").
+
 ## The rule
 
 A match has at most `maxTurns` turns, 30 for this deployment, so each player gets 15. If nobody has taken two hits when the 30th turn ends, the match ends: whoever has taken fewer hits wins and takes both stakes; with equal hits it is a tie, and each player gets their own stake back.

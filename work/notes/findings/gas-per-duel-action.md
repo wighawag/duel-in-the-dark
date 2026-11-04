@@ -2,6 +2,17 @@
 
 Default, unoptimised compiler profile; EDR; `contracts/test/js/Duel.test.ts` prints the table on every run (maximum over the runs of each action).
 
+## Milestone E, the turn limit (2026-11-03, branch `turn-limit`)
+
+Proven actions are unchanged (within a few hundred gas of D). What is new:
+
+| action | gas |
+| --- | --- |
+| endTurn that reaches the turn limit, a draw (two refunds credited) | 94,904 |
+| the forced move that reaches the turn limit, a win on hits | 3,877,006 |
+
+An ordinary `endTurn` is still about 47k. Duel is 24,359 of 24,576 bytes unoptimised (was 23,564): the turn limit fit, with 217 bytes left, so the channel milestone has to split the contract (routes) or turn on the optimiser.
+
 ## Milestone D (2026-10-31, branch `milestone-d`)
 
 32 public inputs per transition (16 state fields before and after), every action through `act`.
