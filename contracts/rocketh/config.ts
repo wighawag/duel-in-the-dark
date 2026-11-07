@@ -57,9 +57,24 @@ export const config = {
 	// },
 	// A LAN box (github:wighawag/ethereum-lan-node): its dev chain, which no
 	// public chain list knows. nix/lan.nix deploys for it at build time, as the
-	// `lan` environment (contracts/scripts/deploy-lan-build.ts). To use the
-	// credits above as well, put the 31337 entry in this same object.
+	// `lan` environment (contracts/scripts/deploy-lan-build.ts). It has no
+	// credits yet: give it `properties` like 31337's once its gas price is known.
 	chains: {
+		// One credit is one PROVEN action: the UltraHonk verifier costs 3.5 to 4
+		// million gas (README.zk-game.md), measured at ~3.8M on the dev chain.
+		// Without this a top-up falls back to DEFAULT_TOP_UP_CEILING (0.01 ETH),
+		// which bought two actions before the player was asked to pay again.
+		31337: {
+			properties: {
+				// The dev node charges a 1 gwei tip on a near zero base fee; twice
+				// that, so the credit count is a floor the player always gets.
+				expectedWorstGasPrice: '2000000000',
+				creditsGasMultiplier: 4000000,
+				// 50 x 4M gas x 2 gwei = 0.4 ETH a top-up: a whole match (30 turns)
+				// for one player, and well within one faucet claim (1 ETH).
+				creditsPerTopUp: 50,
+			},
+		},
 		19216801: {
 			info: {
 				id: 19216801,
