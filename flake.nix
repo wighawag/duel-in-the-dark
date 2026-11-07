@@ -10,13 +10,25 @@
   # Node and pnpm are deliberately NOT provided: the rest of the template tree
   # leaves them to the host, and a devshell that shadowed them would make this
   # repo the odd one out.
+  #
+  # The LAN package (`nix build .#lan`) is ethereum-lan-node's: its
+  # lib.mkRockethGame builds it, from this repo and nix/game.nix (see "On a LAN
+  # box, with no internet" in README.md).
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    ethereum-lan-node = {
+      url = "github:wighawag/ethereum-lan-node";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { self, nixpkgs }:
+    {
+      self,
+      nixpkgs,
+      ethereum-lan-node,
+    }:
     let
       noirVersion = "1.0.0";
 
@@ -72,13 +84,16 @@
           };
           default = self.packages.${system}.nargo;
         }
-        # The game packaged for a LAN box (github:wighawag/ethereum-lan-node):
-        # see nix/lan.nix. x86_64-linux only, as the box is.
+        # The game packaged for a LAN box (github:wighawag/ethereum-lan-node),
+        # by its lib.mkRockethGame. x86_64-linux only, as the box is.
         // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          lan = pkgs.callPackage ./nix/lan.nix {
-            src = self;
-            rev = self.shortRev or self.dirtyShortRev or "unknown";
-          };
+          lan = ethereum-lan-node.lib.mkRockethGame pkgs (
+            {
+              src = self;
+              rev = self.shortRev or self.dirtyShortRev or "unknown";
+            }
+            // import ./nix/game.nix
+          );
         }
       );
 

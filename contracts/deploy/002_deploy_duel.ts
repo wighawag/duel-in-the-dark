@@ -41,7 +41,7 @@ export default deployScript(
 					maxTurns: MAX_TURNS,
 				},
 				// The proxy too, not only the implementation: then every address is
-				// known before the chain exists, which a LAN box needs (nix/lan.nix
+				// known before the chain exists, which a LAN box needs (its package
 				// builds the web app against a throwaway chain), and no other
 				// transaction from the deployer (a faucet's) can move them.
 				deterministic: true,

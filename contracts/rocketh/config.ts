@@ -55,10 +55,11 @@ export const config = {
 	// 		},
 	// 	},
 	// },
-	// A LAN box (github:wighawag/ethereum-lan-node): its dev chain, which no
-	// public chain list knows. nix/lan.nix deploys for it at build time, as the
-	// `lan` environment (contracts/scripts/deploy-lan-build.ts). It has no
-	// credits yet: give it `properties` like 31337's once its gas price is known.
+	// A LAN box (github:wighawag/ethereum-lan-node) needs no entry here: its LAN
+	// package (lib.mkRockethGame, see flake.nix) describes the box's chain
+	// (19216801) in the export itself. It has no credits yet: give it an entry
+	// with `properties` like 31337's once its gas price is known (the export
+	// keeps them).
 	chains: {
 		// One credit is one PROVEN action: the UltraHonk verifier costs 3.5 to 4
 		// million gas (README.zk-game.md), measured at ~3.8M on the dev chain.
@@ -73,15 +74,6 @@ export const config = {
 				// 50 x 4M gas x 2 gwei = 0.4 ETH a top-up: a whole match (30 turns)
 				// for one player, and well within one faucet claim (1 ETH).
 				creditsPerTopUp: 50,
-			},
-		},
-		19216801: {
-			info: {
-				id: 19216801,
-				name: 'LAN',
-				nativeCurrency: {name: 'Ether', symbol: 'ETH', decimals: 18},
-				rpcUrls: {default: {http: ['http://ethereum.local:8545']}},
-				testnet: true,
 			},
 		},
 	},
