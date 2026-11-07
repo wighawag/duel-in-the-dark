@@ -5,6 +5,8 @@
 	import {getAppContext} from '$lib';
 	import {formatEther, parseEther} from 'viem';
 	import Ship from './Ship.svelte';
+	import ActivityStatus from './ActivityStatus.svelte';
+	import {activityLine} from './lib/activity';
 	import {createDuelGame, type MatchSummary} from './lib/game';
 	import {
 		LIVES,
@@ -41,6 +43,7 @@
 	let selectedId = $state<bigint | undefined>(undefined);
 	let backup = $state('');
 
+	let status = $derived(activityLine($activity));
 	let player = $derived($view.step === 'Loaded' ? $view.player : undefined);
 	let matches = $derived($view.step === 'Loaded' ? $view.matches : []);
 	let selected = $derived(matches.find((m) => m.id === selectedId));
@@ -103,21 +106,6 @@
 		</p>
 	</header>
 
-	{#if $activity.step === 'proving' || $activity.step === 'sending'}
-		<p class="flex items-center gap-2">
-			<Spinner />
-			{$activity.action}: {$activity.step}…
-		</p>
-	{:else if $activity.step === 'done' && $activity.result.status === 'error'}
-		<p class="text-destructive">
-			{$activity.action} failed: {$activity.result.message}
-		</p>
-	{:else if $activity.step === 'failed'}
-		<p class="text-destructive">
-			{$activity.action} failed: {$activity.message}
-		</p>
-	{/if}
-
 	<Ship {rooms} onpick={pick} />
 
 	{#if selected && role}
@@ -148,6 +136,7 @@
 				{statusLine(selected, role, $ending)}
 				{#if selected.status === 'Active'}· {role.secondsLeft}s left{/if}
 			</p>
+			<ActivityStatus line={status} />
 
 			{#if selected.status === 'Open'}
 				{#if role.canJoin}
@@ -315,6 +304,7 @@
 					pickedRoom as keyof typeof ROOM_NAMES
 				]}
 			</Button>
+			<ActivityStatus line={status} />
 		</div>
 
 		<div class="flex flex-col gap-2 rounded-lg border p-4">
@@ -344,6 +334,9 @@
 		<div class="flex items-center gap-3 rounded-lg border p-4">
 			<p>Winnings and refunds: {formatEther($view.balance)} ETH</p>
 			<Button disabled={busy} onclick={() => game.withdraw()}>Withdraw</Button>
+			{#if $activity.step !== 'idle' && $activity.action === 'Withdraw'}
+				<ActivityStatus line={status} />
+			{/if}
 		</div>
 	{/if}
 
