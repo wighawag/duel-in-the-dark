@@ -11,6 +11,9 @@ importers:
 
   .:
     devDependencies:
+      duel-in-the-dark-contracts:
+        specifier: workspace:*
+        version: link:contracts
       expand-vars:
         specifier: ^0.1.0
         version: 0.1.0
@@ -23,9 +26,6 @@ importers:
       syncpack:
         specifier: ^15.3.3
         version: 15.3.3
-      template-zk-game-contracts:
-        specifier: workspace:*
-        version: link:contracts
       zellij-launcher:
         specifier: ^0.0.1
         version: 0.0.1
@@ -238,6 +238,12 @@ importers:
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
+      duel-in-the-dark-circuits:
+        specifier: workspace:*
+        version: link:../circuits
+      duel-in-the-dark-contracts:
+        specifier: workspace:*
+        version: link:../contracts
       eip-1193:
         specifier: ^0.7.4
         version: 0.7.4
@@ -307,12 +313,6 @@ importers:
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
-      duel-in-the-dark-circuits:
-        specifier: workspace:*
-        version: link:../circuits
-      duel-in-the-dark-contracts:
-        specifier: workspace:*
-        version: link:../contracts
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
