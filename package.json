@@ -4,6 +4,10 @@
   "license": "AGPL-3.0-only",
   "private": true,
   "type": "module",
+  "lan": {
+    "pnpmDepsHash": "sha256-61df33KmV7ThoFks+DSZsGR0Sfxs5bSQiLDYZZdbAeI=",
+    "preBuild": "pnpm --filter ./circuits exec tsc"
+  },
   "packageManager": "pnpm@10.28.1",
   "devDependencies": {
     "expand-vars": "^0.1.0",

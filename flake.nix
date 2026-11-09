@@ -12,8 +12,8 @@
   # repo the odd one out.
   #
   # The LAN package (`nix build .#lan`) is ethereum-lan-node's: its
-  # lib.mkRockethGame builds it, from this repo and nix/game.nix (see "On a LAN
-  # box, with no internet" in README.md).
+  # lib.mkRockethGame builds it, from this repo and the "lan" field of
+  # package.json (see "On a LAN box, with no internet" in README.md).
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -87,13 +87,10 @@
         # The game packaged for a LAN box (github:wighawag/ethereum-lan-node),
         # by its lib.mkRockethGame. x86_64-linux only, as the box is.
         // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          lan = ethereum-lan-node.lib.mkRockethGame pkgs (
-            {
-              src = self;
-              rev = self.shortRev or self.dirtyShortRev or "unknown";
-            }
-            // import ./nix/game.nix
-          );
+          lan = ethereum-lan-node.lib.mkRockethGame pkgs {
+            src = self;
+            rev = self.shortRev or self.dirtyShortRev or "unknown";
+          };
         }
       );
 
