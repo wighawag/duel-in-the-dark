@@ -61,7 +61,7 @@ The contract takes every action through one function, `act(matchId, player, circ
 
 ## On a LAN box, with no internet
 
-`nix build .#lan` packages the game for [ethereum-lan-node](https://github.com/wighawag/ethereum-lan-node), as "On a LAN box, with no internet" in README.md describes (the package is inherited from the template; this repo only sets `nix/game.nix`). Proving needs nothing from the internet either: the CRS is committed (`circuits/crs`, see README.zk-game.md). Add it to a box as `services.ethereumLanNode.games.duel = { package = inputs.duel-in-the-dark.packages.x86_64-linux.lan; webPort = 8002; };`.
+`nix build .#lan` packages the game for [ethereum-lan-node](https://github.com/wighawag/ethereum-lan-node), as "On a LAN box, with no internet" in README.md describes (ethereum-lan-node builds the package; this repo only sets the `"lan"` field of `package.json`). Proving needs nothing from the internet either: the CRS is committed (`circuits/crs`, see README.zk-game.md). Add it to a box as `services.ethereumLanNode.games.duel = { package = inputs.duel-in-the-dark.packages.x86_64-linux.lan; webPort = 8002; };`.
 
 ## Cost
 
