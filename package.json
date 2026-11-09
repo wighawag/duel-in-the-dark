@@ -4,6 +4,12 @@
   "license": "AGPL-3.0-only",
   "private": true,
   "type": "module",
+  "lan": {
+    "pnpmDepsHash": "sha256-61df33KmV7ThoFks+DSZsGR0Sfxs5bSQiLDYZZdbAeI=",
+    "preBuild": "pnpm --filter ./circuits exec tsc",
+    "deployBin": "duel-deploy",
+    "description": "Two players hunt each other through a dark ship; every move proven in zero knowledge."
+  },
   "packageManager": "pnpm@10.28.1",
   "devDependencies": {
     "expand-vars": "^0.1.0",
