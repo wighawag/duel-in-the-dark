@@ -85,6 +85,12 @@ contracts/test/solidity/GreetingsRegistry
 web/src/routes/demo
 web/src/routes/offline-demo
 web/src/lib/offline.ts
+# Where `$lib/offline.ts` runs its chain (in a Worker, in a browser): nothing
+# else uses it, so it went with it.
+web/src/lib/offline-node.ts
+web/src/lib/offline-node-host.ts
+web/src/lib/offline-node-worker.ts
+web/test/lib/offline-node.test.ts
 
 # THE HALF OF THE CONTEXT A FORK IS MEANT TO REPLACE, and its two demo-only
 # modules. `$app-specific` points at `web/src/lib/game/app.ts` instead (see
