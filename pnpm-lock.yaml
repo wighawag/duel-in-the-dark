@@ -23,6 +23,9 @@ importers:
       syncpack:
         specifier: ^15.3.3
         version: 15.3.3
+      template-zk-game-contracts:
+        specifier: workspace:*
+        version: link:contracts
       zellij-launcher:
         specifier: ^0.0.1
         version: 0.0.1
