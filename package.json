@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "lan": {
-    "pnpmDepsHash": "sha256-61df33KmV7ThoFks+DSZsGR0Sfxs5bSQiLDYZZdbAeI=",
+    "pnpmDepsHash": "sha256-ISm+y8R6Ag0osGkxlDjFWTBbGtLqiyzyWM47GUCLObY=",
     "preBuild": "pnpm --filter ./circuits exec tsc",
     "deployBin": "duel-deploy",
     "description": "Two players hunt each other through a dark ship; every move proven in zero knowledge."
