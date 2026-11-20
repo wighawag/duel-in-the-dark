@@ -20,7 +20,7 @@ import {
 	describe as describeEntry,
 	type HistoryEntry,
 } from '../../../src/routes/duel/lib/history';
-import {GAME_SCRIPTS} from '../../lib/game-world';
+import {APP_SCRIPTS} from '../../lib/app-world';
 
 // The /duel page's READ side against a real chain (an embedded world running
 // the app's deploy scripts): two players play a shot or a listen (whichever the
@@ -57,7 +57,7 @@ describe('/duel against an embedded chain', () => {
 				nativeCurrency: {name: 'Ether', symbol: 'ETH', decimals: 18},
 			},
 			rocketh: {config, extensions},
-			scripts: GAME_SCRIPTS,
+			scripts: APP_SCRIPTS,
 			accounts: {deployer: KEYS[0], admin: KEYS[1]},
 			initialBalances: Object.fromEntries(
 				accounts.map((a) => [a.address, 10n ** 24n]),

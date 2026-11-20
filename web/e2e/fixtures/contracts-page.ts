@@ -1,5 +1,5 @@
 import {expect, type Page} from '@playwright/test';
-import {GAME} from '../routes';
+import {MAIN_PAGE} from '../routes';
 
 /**
  * THE TRANSACTION THE INHERITED SUITES SEND, now that there is no greetings demo.
@@ -15,7 +15,7 @@ import {GAME} from '../routes';
  * Through /contracts, i.e. from the ACCOUNT executor, which is also the route
  * these suites assert.
  */
-export const HARMLESS_CONTRACT = GAME.contract;
+export const HARMLESS_CONTRACT = MAIN_PAGE.contract;
 export const HARMLESS_WRITE = 'revokeDelegate';
 /** An address that is nobody's delegate. */
 export const HARMLESS_ARGUMENT = '0x000000000000000000000000000000000000dEaD';

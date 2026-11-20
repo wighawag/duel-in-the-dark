@@ -10,8 +10,15 @@ import {createDuelState, type DuelStateStore} from './state.js';
  * .offshoot-omissions). It exports what that module exported.
  */
 
-/** The game's name and page, for the inherited navbar and home page. */
-export const GAME = {name: 'Duel in the Dark', route: '/duel/'} as const;
+/**
+ * The app's main page, here the game: its name and page, for the inherited
+ * navbar (`name`) and the home page's button (`homeLink`), both to `route`.
+ */
+export const MAIN_PAGE = {
+	name: 'Duel in the Dark',
+	route: '/duel/',
+	homeLink: 'Play Duel in the Dark',
+} as const;
 
 /**
  * WHAT THIS APP'S BROWSER KEY IS FOR, in the sentences of ui/delegation/grant.ts.
