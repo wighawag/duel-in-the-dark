@@ -8,7 +8,7 @@ import {
 import {createPublicClient, createWalletClient, http} from 'viem';
 import {mnemonicToAccount} from 'viem/accounts';
 import {parseImpersonateAddresses} from '../../src/lib/dev-accounts';
-import {GAME} from '../routes';
+import {MAIN_PAGE} from '../routes';
 
 /**
  * Extended test fixtures for E2E testing with wallet interactions.
@@ -1215,11 +1215,11 @@ export const test = base.extend<WalletFixtures & WalletOptions>({
 		await fundWallets();
 
 		// Navigate to demo page
-		await page.goto(GAME.route);
+		await page.goto(MAIN_PAGE.route);
 
 		// Wait for app to initialize
 		// The game page is up once its heading renders.
-		await expect(page.getByRole('heading', {name: GAME.heading})).toBeVisible({
+		await expect(page.getByRole('heading', {name: MAIN_PAGE.heading})).toBeVisible({
 			timeout: 30000,
 		});
 

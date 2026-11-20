@@ -58,7 +58,7 @@ web/src/lib/index.ts                                   where this app is compose
 web/src/lib/kit/README.md                              the adapter's scope as it stands here, its claims narrowed to what is true
 web/src/routes/+layout.svelte                          the shell: the chrome as a list a descendant extends, the overlay layers, a surface's own chrome
 web/src/routes/+layout.ts                              the version logged at start and the named-logs init logger, beside the stem's service-worker toggle
-web/src/routes/+page.svelte                            jolly-roger's home page, through the kit's paths and the shadcn button
+web/src/routes/+page.svelte                            jolly-roger's home page, its button to the app's main page (`MAIN_PAGE` of `$app-specific`), through the kit's paths and the shadcn button
 web/src/routes/+error.svelte                           the error page in the shadcn style and clamped to the viewport like the rest of the app
 web/test/framework-boundary.test.ts                    the boundary rule stated as inherited from template-svelte, with this repo's ADR-0004 and its own leak list
 
@@ -151,8 +151,8 @@ pnpm-lock.yaml                                         webevm, @eip-1193/over-po
 contracts/package.json                                 the package is built at install (tsc), because web/src imports it to deploy in the browser
 web/package.json                                       webevm, @eip-1193/over-port and @rocketh/web
 web/src/lib/context/core.ts                            the offline world's wallet needs no UI to ask its questions, and one tab holds two worlds under one leader
-web/src/lib/core/connection/remote.ts                  a connection to a chain in this tab, one wallet with one account surviving a reload
-web/src/lib/core/connection/types.ts                   the world connection's types
+web/src/lib/core/connection/remote.ts                  a connection to a chain in this tab, one wallet with one account surviving a reload; it reports the node url it used, and may describe records other than the build's
+web/src/lib/core/connection/types.ts                   the world connection's types, with the node url a connection reports
 web/src/lib/core/tab-leader/TabLeaderService.ts        one leader election per tab and world, so a second world's transactions complete (a78d73a2; core, a candidate for main)
 web/src/lib/core/tab-leader/storage-lock.ts            the same fix, in the storage lock
 web/test/lib/core/tab-leader/storage-lock.test.ts      the two-worlds case of that fix
@@ -165,4 +165,4 @@ web/src/routes/+page.svelte                            the home page's "Play Off
 
 contracts/package.json                                 both stems' changes: @etherplay/delegation (local-signer) and the package built at install (embedded-chain)
 pnpm-lock.yaml                                         both stems' dependencies, re-resolved together
-web/src/lib/context/core.ts                            both stems' compositions in one: the local signer and the payment rail beside the world in the tab and its tab leader
+web/src/lib/context/core.ts                            both stems' compositions in one: the local signer and the payment rail beside the world in the tab and its tab leader, both broadcasting through the node url the connection reports (a world's provider, not the app's node)

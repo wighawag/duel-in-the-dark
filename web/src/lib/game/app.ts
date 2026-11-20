@@ -20,11 +20,16 @@ import {createGameState, type GameStateStore} from './state.js';
  * $lib/zk-game/send.ts.
  */
 /**
- * THE GAME'S NAME AND PAGE, for the inherited chrome that links to it (the
- * navbar, the home page), so a descendant renames its game here and edits no
- * shared file. The e2e suites have the same pair in web/e2e/routes.ts.
+ * THE APP'S MAIN PAGE, here the game, for the inherited chrome that links to
+ * it: the navbar's link (`name`) and the home page's button (`homeLink`), both
+ * to `route`. So a descendant renames its game here and edits no shared file.
+ * The e2e suites name the same page in `MAIN_PAGE` of web/e2e/routes.ts.
  */
-export const GAME = {name: 'Hide and Seek', route: '/hide-and-seek/'} as const;
+export const MAIN_PAGE = {
+	name: 'Hide and Seek',
+	route: '/hide-and-seek/',
+	homeLink: 'Play Hide and Seek',
+} as const;
 
 export const SIGNER_GRANT: SignerGrant = {action: 'play your turns'};
 
