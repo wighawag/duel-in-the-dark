@@ -91,6 +91,12 @@ web/src/lib/offline-node.ts
 web/src/lib/offline-node-host.ts
 web/src/lib/offline-node-worker.ts
 web/test/lib/offline-node.test.ts
+# The offline world's opener, which `$lib/offline.ts` composes, and the suite of
+# the `/offline-demo` it boots: with neither here, nothing would open a world,
+# and the opener reads `$lib/offline-node`, which went above.
+web/src/lib/offline-world.ts
+web/test/lib/offline-world.test.ts
+web/e2e/tests/offline-demo.e2e.ts
 
 # THE HALF OF THE CONTEXT A FORK IS MEANT TO REPLACE, and its two demo-only
 # modules. `$app-specific` points at `web/src/lib/game/app.ts` instead (see
