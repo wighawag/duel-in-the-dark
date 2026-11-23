@@ -47,6 +47,7 @@ web/package.json                           this repo's names, and the circuits a
 web/svelte.config.js                       `$app-specific` points at the game (src/lib/game/app.ts)
 web/src/lib/ui/navbar/navbar.svelte        the navbar's link to the prover demo (/zk/)
 web/src/routes/+page.svelte                no "Play Offline": this template omits the offline demo
+web/src/web-config.json                    the brand: this template's name, description (its README's first line) and repository
 
 # The e2e and the unit tests
 web/e2e/routes.ts                          `MAIN_PAGE` is Hide and Seek, its read `lastMatchId` and its write revokeDelegate with an address made from the label

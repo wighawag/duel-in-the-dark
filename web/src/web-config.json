@@ -1,9 +1,9 @@
 {
-	"name": "Jolly Roger",
-	"title": "Jolly Roger",
-	"description": "Build and Deploy for Eternity",
+	"name": "template-zk-game",
+	"title": "template-zk-game",
+	"description": "A template for onchain games with hidden information proven in zero knowledge",
 	"canonicalURL": "http://localhost:8080",
-	"repoURL": "",
+	"repoURL": "https://github.com/wighawag/template-zk-game",
 	"communityURL": "",
 	"ENSName": null,
 	"themeColor": "#000000",
