@@ -1219,7 +1219,9 @@ export const test = base.extend<WalletFixtures & WalletOptions>({
 
 		// Wait for app to initialize
 		// The game page is up once its heading renders.
-		await expect(page.getByRole('heading', {name: MAIN_PAGE.heading})).toBeVisible({
+		await expect(
+			page.getByRole('heading', {name: MAIN_PAGE.heading}),
+		).toBeVisible({
 			timeout: 30000,
 		});
 

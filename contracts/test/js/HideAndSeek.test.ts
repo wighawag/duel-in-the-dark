@@ -386,8 +386,12 @@ describe('HideAndSeek', function () {
 
 	describe('the turn limit', function () {
 		/** End turns 1.. `upTo` in order (turn 1 is the turn holder's). */
-		async function endTurns(m: Awaited<ReturnType<typeof startedMatch>>, upTo: number) {
-			for (let t = 1; t <= upTo; t++) await m.endTurn(t % 2 === 1 ? m.turn : m.other);
+		async function endTurns(
+			m: Awaited<ReturnType<typeof startedMatch>>,
+			upTo: number,
+		) {
+			for (let t = 1; t <= upTo; t++)
+				await m.endTurn(t % 2 === 1 ? m.turn : m.other);
 		}
 
 		it('is off by default: a match plays past turn 40 as before', async function () {
