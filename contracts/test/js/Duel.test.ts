@@ -24,7 +24,7 @@ import {setupFixtures} from './utils/index.js';
 // some other statement, which the contract must refuse because it builds the
 // statement's `state` half itself.
 
-const {provider, networkHelpers} = await network.connect();
+const {provider, networkHelpers} = await network.create();
 const {deployAll} = setupFixtures(provider);
 
 const STAKE = parseEther('1');
