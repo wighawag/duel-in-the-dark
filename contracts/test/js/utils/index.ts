@@ -30,23 +30,24 @@ export function setupFixtures(provider: EthereumProvider) {
 
 		/**
 		 * Everything, plus a second HideAndSeek limited to `LIMITED_TURNS`
-		 * turns (the app's deploys none), in place of the first.
+		 * turns (the app's deploys none), in place of the first. Each read
+		 * names its function literally, so it is typed by that function's
+		 * output (one helper over a union of names typed them all as the
+		 * union of an address and a number).
 		 */
 		async deployLimited() {
 			const all = await fixtures.deployAll();
 			const {env} = all;
 			const first = all.HideAndSeek;
-			const read = (functionName: 'inRangeVerifier' | 'moveVerifier' | 'answerVerifier' | 'turnDuration' | 'responseDuration') =>
-				env.read(first, {functionName});
 			const HideAndSeek = (await env.deploy('LimitedHideAndSeek', {
 				account: env.namedAccounts.deployer,
 				artifact: artifacts.HideAndSeek,
 				args: [
-					await read('inRangeVerifier'),
-					await read('moveVerifier'),
-					await read('answerVerifier'),
-					await read('turnDuration'),
-					await read('responseDuration'),
+					await env.read(first, {functionName: 'inRangeVerifier'}),
+					await env.read(first, {functionName: 'moveVerifier'}),
+					await env.read(first, {functionName: 'answerVerifier'}),
+					await env.read(first, {functionName: 'turnDuration'}),
+					await env.read(first, {functionName: 'responseDuration'}),
 					LIMITED_TURNS,
 				],
 			})) as unknown as typeof first;
