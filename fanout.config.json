@@ -5,5 +5,5 @@
       "stemBranch": "main"
     }
   },
-  "verify": "pnpm install && pnpm --filter ./web check && pnpm --filter ./web run test:unit && pnpm --filter ./circuits test && pnpm --filter ./contracts test"
+  "verify": "pnpm install && pnpm --filter ./web check && pnpm --filter ./web run test:unit && pnpm --filter ./circuits test && pnpm --filter ./contracts test && pnpm --filter ./contracts typescript"
 }
