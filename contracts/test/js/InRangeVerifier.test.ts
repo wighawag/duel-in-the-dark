@@ -9,7 +9,7 @@ import {setupFixtures} from './utils/index.js';
 // prover the web uses is accepted by the verifier the deploy scripts put on
 // chain for that circuit, and the verifier really checks something.
 
-const {provider, networkHelpers} = await network.connect();
+const {provider, networkHelpers} = await network.create();
 const {deployAll} = setupFixtures(provider);
 
 describe('InRangeVerifier', function () {

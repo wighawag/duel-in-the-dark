@@ -15,7 +15,7 @@ import {setupFixtures, LIMITED_TURNS} from './utils/index.js';
 // The framework (ZKMatches) is tested through the reference game: what it
 // promises is only observable through a game's actions.
 
-const {provider, networkHelpers} = await network.connect();
+const {provider, networkHelpers} = await network.create();
 const {deployAll, deployLimited} = setupFixtures(provider);
 
 const STAKE = parseEther('1');
