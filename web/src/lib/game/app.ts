@@ -31,7 +31,11 @@ export const MAIN_PAGE = {
 	homeLink: 'Play Hide and Seek',
 } as const;
 
-export const SIGNER_GRANT: SignerGrant = {action: 'play your turns'};
+export const SIGNER_GRANT: SignerGrant = {
+	action: 'play your turns',
+	// A game: the template's default headline ("act for you") is generic.
+	headline: 'Let this browser play for you',
+};
 
 export function createAppContext(core: CoreServices): AppMembers {
 	const onchainState = createGameState({
