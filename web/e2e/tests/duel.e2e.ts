@@ -45,11 +45,16 @@ describe('Duel in the Dark', () => {
 			.click();
 		await connectWallet(a);
 		await waitForTransaction(a);
-		await expect(
-			a.getByRole('button', {name: /Open · 0\.01 ETH · yours/}),
-		).toBeVisible({
+		const mine = a.getByRole('button', {name: /Open · 0\.01 ETH · yours/});
+		await expect(mine).toBeVisible({
 			timeout: PROVING,
 		});
+		// B joins THIS match, by its id: another test (faucet.e2e.ts) creates
+		// an open match on the same chain in parallel (QA F9).
+		const id = /^#(\d+) /.exec((await mine.textContent())?.trim() ?? '')?.[1];
+		expect(id).toBeDefined();
+		const matchButton = (page: Page, status: string) =>
+			page.getByRole('button', {name: new RegExp(`^#${id} · ${status} `)});
 
 		// Player B, in another browser context, joins it from the Cargo Hold.
 		const contextB = await browser.newContext();
@@ -60,10 +65,7 @@ describe('Duel in the Dark', () => {
 		await connect.click();
 		await connectWallet(b);
 		await fundWalletAccounts(b);
-		await b
-			.getByRole('button', {name: /Open · 0\.01 ETH/})
-			.first()
-			.click();
+		await matchButton(b, 'Open').click();
 		await room(b, 7).click();
 		await b
 			.getByRole('button', {
@@ -73,10 +75,7 @@ describe('Duel in the Dark', () => {
 		await connectWallet(b);
 		await waitForTransaction(b);
 
-		await a
-			.getByRole('button', {name: /Active.*yours/})
-			.first()
-			.click();
+		await matchButton(a, 'Active').click();
 		await expect(b.getByText(/You are seat 1, in the Cargo Hold/)).toBeVisible({
 			timeout: PROVING,
 		});

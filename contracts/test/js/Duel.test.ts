@@ -1,7 +1,7 @@
 import {expect} from 'earl';
 import {describe, it, before, after} from 'node:test';
 import {network} from 'hardhat';
-import {parseEther} from 'viem';
+import {encodeFunctionData, parseEther} from 'viem';
 import {createZK, type ZK} from 'duel-in-the-dark-circuits';
 import {circuits} from 'duel-in-the-dark-circuits/circuits';
 import {
@@ -902,5 +902,70 @@ describe('Duel', function () {
 			const s = await m.match();
 			expect([s.status, s.winner]).toEqual([3, m.other]);
 		});
+	});
+});
+
+// QA F9. Two first matches in one block: a wallet estimates the second one on
+// the pending state, i.e. as match #2, the block mines it FIRST, and as match
+// #1 it costs ~17.4k more (`++_lastMatchId` writes a zero slot). With the exact
+// estimate as its limit the duel's create runs out of gas and reverts like an
+// invalid proof; with the app's headroom (GAS_HEADROOM_PERCENT in
+// web/src/lib/zk-game/send.ts) it goes through.
+describe('a create estimated as the second match of a block but mined first', function () {
+	const GAS_HEADROOM_PERCENT = 10n; // keep in step with web/src/lib/zk-game/send.ts
+	const rpc = (method: string, params: unknown[] = []) =>
+		provider.request({method, params}) as Promise<any>;
+	const hex = (n: bigint) => `0x${n.toString(16)}`;
+
+	/** The status of the late-estimated, first-mined create. */
+	async function race(headroomPercent: bigint) {
+		const {Duel, unnamedAccounts} = await networkHelpers.loadFixture(deployAll);
+		const [x, y] = [unnamedAccounts[0], unnamedAccounts[1]];
+		const [px, py] = [await duel.start(5), await duel.start(7)];
+		const tx = (who: `0x${string}`, p: typeof px) => ({
+			from: who,
+			to: Duel.address,
+			value: hex(STAKE),
+			data: encodeFunctionData({
+				abi: Duel.abi,
+				functionName: 'createMatch',
+				args: [who, p.secret.commitment, p.proof.proof],
+			}),
+		});
+		const maxFeePerGas = hex(10n ** 11n);
+		await rpc('evm_setAutomine', [false]);
+		try {
+			// X waits in the mempool with a low tip.
+			const gasX = BigInt(await rpc('eth_estimateGas', [tx(x, px)]));
+			await rpc('eth_sendTransaction', [
+				{...tx(x, px), gas: hex(gasX), maxPriorityFeePerGas: '0x1', maxFeePerGas},
+			]);
+			// Y is estimated on top of X (default tag: pending), as a wallet
+			// does, then sent with a higher tip so it is mined first.
+			const gasY = BigInt(await rpc('eth_estimateGas', [tx(y, py)]));
+			const hashY = await rpc('eth_sendTransaction', [
+				{
+					...tx(y, py),
+					gas: hex(gasY + (gasY * headroomPercent) / 100n),
+					maxPriorityFeePerGas: hex(10n ** 10n),
+					maxFeePerGas,
+				},
+			]);
+			await rpc('evm_mine');
+			const block = await rpc('eth_getBlockByNumber', ['latest', false]);
+			expect(block.transactions[0]).toEqual(hashY);
+			expect(block.transactions.length).toEqual(2);
+			return (await rpc('eth_getTransactionReceipt', [hashY])).status;
+		} finally {
+			await rpc('evm_setAutomine', [true]);
+		}
+	}
+
+	it('reverts with the exact estimate as its gas limit', async function () {
+		expect(await race(0n)).toEqual('0x0');
+	});
+
+	it('goes through with the headroom the app adds', async function () {
+		expect(await race(GAS_HEADROOM_PERCENT)).toEqual('0x1');
 	});
 });
