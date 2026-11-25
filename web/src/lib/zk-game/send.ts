@@ -59,6 +59,27 @@ type ContractRequest = Extract<
 	{contract: unknown}
 >['contract'];
 
+/**
+ * Gas headroom on every send, in percent of the estimate. Each of these calls
+ * verifies a proof, and the verifier is called with 63/64 of the gas left, so a
+ * limit equal to the estimate leaves it starved by any small change between the
+ * estimate and the block: a `_verify` that runs out of gas is caught and reverts
+ * like an invalid proof. Seen for real (QA F9): two `createMatch` in one block,
+ * one estimated as the second match (on the pending state) but mined first,
+ * paid ~17.4k more for writing `_lastMatchId` from zero and reverted. Unused
+ * gas is refunded, so the headroom only raises the ceiling.
+ */
+export const GAS_HEADROOM_PERCENT = 10n;
+
+/** `request` with its `gas` raised by GAS_HEADROOM_PERCENT, if it has one. */
+export function withGasHeadroom<T extends {gas?: bigint}>(request: T): T {
+	if (request.gas === undefined) return request;
+	return {
+		...request,
+		gas: request.gas + (request.gas * GAS_HEADROOM_PERCENT) / 100n,
+	};
+}
+
 /** The connected account, i.e. the player every action is for. */
 export async function currentPlayer(
 	deps: Pick<Context, 'connection'>,
@@ -89,7 +110,7 @@ export async function sendFromAccount<TAbi extends Abi>(
 		);
 		return {
 			status: 'submitted',
-			hash: await executor.client.writeContract(request),
+			hash: await executor.client.writeContract(withGasHeadroom(request)),
 		};
 	});
 }
@@ -123,7 +144,7 @@ export async function sendAsSigner<TAbi extends Abi>(
 		);
 		return {
 			status: 'submitted',
-			hash: await executor.client.writeContract(request),
+			hash: await executor.client.writeContract(withGasHeadroom(request)),
 		};
 	});
 }
