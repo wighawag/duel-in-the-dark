@@ -43,6 +43,7 @@ circuits/src/field.ts                      the package's name in its doc comment
 contracts/.env                             the dev faucet dispenses 1 ETH: a claim must cover a duel's stake and its gas
 contracts/deploy/000_deploy_verifiers.ts   the circuits package under this repo's name
 contracts/package.json                     this repo's names
+contracts/hardhat.config.ts                the default profile optimised like production: Duel unoptimised is over the EIP-170 code limit
 contracts/rocketh/config.ts                the dev chain's credits: one credit is one proven action
 contracts/test/js/InRangeVerifier.test.ts  the circuits package under this repo's name
 contracts/test/js/utils/index.ts           the fixtures deploy the duel's verifiers and Duel

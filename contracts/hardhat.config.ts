@@ -32,6 +32,18 @@ const config: HardhatUserConfig = {
 				// with `version`. Hardhat has no other way to take a compiler, so
 				// this line stays in every repo that builds one.
 				path: process.env.SOLC_PATH || undefined,
+				// OPTIMISED, unlike the stem's default: Duel unoptimised is over
+				// the 24,576-byte code limit (EIP-170) since @etherplay/delegation
+				// 0.2.0 added resignDelegate (24,956 bytes; 18,144 optimised), and an
+				// embedded chain enforces the limit, so the web suites could not
+				// deploy it. The same settings as production, so the tests deploy
+				// what ships.
+				settings: {
+					optimizer: {
+						enabled: true,
+						runs: 999999,
+					},
+				},
 			},
 			production: {
 				version: '0.8.28',
