@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "lan": {
-    "pnpmDepsHash": "sha256-Kl3af5jTyXxtVFRQuhlzMVY9COcXAkPuRNP0f/M/hFg=",
+    "pnpmDepsHash": "sha256-UErZ1Q/MKFfdb53kq+mOmwHqytmCtIswOozv9jGwfYg=",
     "preBuild": "pnpm --filter ./circuits exec tsc"
   },
   "packageManager": "pnpm@10.28.1",
